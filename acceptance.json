@@ -1,0 +1,9 @@
+{
+  "jsp_id": "JSP-000361",
+  "catalog_url": "https://github.com/TheJustinSunPrize/awards/blob/main/problems/catalog-0301-0400.md#JSP-000361",
+  "original_question_en": "For a fixed infinite integer set, how many divisors of a single integer can belong to that set?",
+  "required_theorems": [
+    "divisor_set_limsup"
+  ],
+  "notes": "ErSa80 limsup for every k; a single-k or weaker growth statement alone is not prize_ready."
+}

@@ -1,0 +1,21 @@
+jsp_id: JSP-000361
+catalog_url: https://github.com/TheJustinSunPrize/awards/blob/main/problems/catalog-0301-0400.md#JSP-000361
+status: wip
+prize_ready: false
+github_owner: Yi-111-a
+lean_repository: https://github.com/Yi-111-a/jsp-000361-divisor-limsup
+branch: main
+commit_sha: ""
+headline_theorems:
+  - divisor_set_limsup
+roles:
+  formalization_operators:
+    - Yi-111-a
+  mathematical_solvers_literature:
+    - "Erdős–Sárközy (ErSa80), Studia Sci. Math. Hungar. (1980), 467–479"
+attribution_basis: |
+  Formalization work under GitHub account Yi-111-a. Mathematical solution
+  credits remain with the published literature. This stub does not claim the prize.
+build:
+  toolchain_file: lean/lean-toolchain
+  command: lake build
