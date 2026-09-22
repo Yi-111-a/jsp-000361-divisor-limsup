@@ -48,7 +48,7 @@ private lemma card_fiber_mul_le (x j : ℕ) (hj : 1 ≤ j) :
   -- (1) `N_j * (j * log 2) ≤ ∑_{p ∈ fiber} log p`, since `2^j ≤ p` on the fiber.
   have h1 : ((Nat.primesBelow x).filter fun p ↦ Nat.log 2 p = j).card * (j * Real.log 2)
       ≤ ∑ p ∈ (Nat.primesBelow x).filter fun p ↦ Nat.log 2 p = j, Real.log p := by
-    rw [Finset.sum_const, nsmul_eq_mul]
+    rw [← nsmul_eq_mul, ← Finset.sum_const]
     apply Finset.sum_le_sum
     intro p hp
     obtain ⟨hpmem, hpm⟩ := Finset.mem_filter.1 hp
@@ -89,7 +89,7 @@ private lemma card_fiber_mul_le (x j : ℕ) (hj : 1 ≤ j) :
         = (((Nat.primesBelow x).filter fun p ↦ Nat.log 2 p = j).card * j)
           * Real.log 2 := by ring
     rw [hL, hR] at h
-    exact (mul_le_mul_right hlog2pos).mp h
+    exact le_of_mul_le_mul_right h hlog2pos
   -- (4) divide: `N_j * (1/2)^j ≤ 4 / j`.
   have hjpos : (0 : ℝ) < j := by exact_mod_cast hj
   have h2jpos : (0 : ℝ) < (2 : ℝ) ^ j := by positivity

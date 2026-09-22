@@ -63,7 +63,7 @@ private theorem recipSum_le_log_aux (A : Set ℕ) (x : ℕ) :
         Finset.sum_le_sum_of_subset_of_nonneg hsub (fun a _ _ => by positivity)
     _ = (harmonic (x - 1) : ℝ) := hsum
     _ ≤ 1 + Real.log ↑(x - 1) := harmonic_le_one_add_log (x - 1)
-    _ ≤ 1 + Real.log ↑x := add_le_add_left hlog 1
+    _ ≤ 1 + Real.log ↑x := by linarith [hlog]
 
 /-- `Nat.lcmUpto t ≤ exp((log 4 + 4) · t)` via Chebyshev's `ψ` bound. -/
 theorem lcmUpto_le_exp (t : ℕ) :
@@ -96,6 +96,9 @@ theorem recipSum_lcmUpto_le (A : Set ℕ) (t : ℕ) :
   have hlog2 : Real.log 2 ≤ 1 := by
     have h := Real.log_le_sub_one_of_pos (show (0:ℝ) < 2 by norm_num)
     linarith
+  have hL1 : (1 : ℝ) ≤ (Nat.lcmUpto t : ℝ) := by
+    have h' : 1 ≤ Nat.lcmUpto t := Nat.lcmUpto_pos t
+    exact_mod_cast h'
   have hstep : Real.log ((Nat.lcmUpto t : ℝ) + 1) ≤
       Real.log (2 * (Nat.lcmUpto t : ℝ)) :=
     Real.log_le_log (by linarith) (by linarith)

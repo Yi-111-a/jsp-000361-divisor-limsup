@@ -20,7 +20,7 @@ open scoped Classical
 /-- A prime power `p^e` with `e ≥ 1` divides `lcmUpto t` iff `p^e ≤ t`. -/
 theorem pow_dvd_lcmUpto_iff {p e t : ℕ} (hp : p.Prime) (he : 1 ≤ e) :
     p ^ e ∣ Nat.lcmUpto t ↔ p ^ e ≤ t := by
-  rw [hp.prime.pow_dvd_iff_le_factorization (Nat.lcmUpto_ne_zero t),
+  rw [Nat.Prime.pow_dvd_iff_le_factorization hp.prime (Nat.lcmUpto_ne_zero t),
     Nat.factorization_lcmUpto t hp]
   rcases eq_or_ne t 0 with rfl | ht
   · rw [Nat.log_zero_right]
@@ -45,7 +45,7 @@ theorem dvd_lcmUpto_iff {a t : ℕ} (ha : a ≠ 0) :
       exact Nat.zero_le _
     · have h1 : 1 ≤ a.factorization p := Nat.one_le_iff_ne_zero.mpr h0
       have hdvd : p ^ a.factorization p ∣ a :=
-        (hp.prime.pow_dvd_iff_le_factorization ha).mpr le_rfl
+        (Nat.Prime.pow_dvd_iff_le_factorization hp.prime ha).mpr le_rfl
       exact Nat.le_log_of_pow_le hp.one_lt (h p hp _ h1 hdvd)
 
 /-- Every `a ∈ A \ {0}` all of whose prime-power factors are `≤ s`

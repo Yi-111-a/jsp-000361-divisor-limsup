@@ -78,12 +78,12 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
     have hk0r : (0:ℝ) < (k:ℝ) := by exact_mod_cast hkpos
     have hk1 : (1:ℝ) ≤ (k:ℝ) := by exact_mod_cast hkpos
     -- constants
-    set c : ℝ := Real.exp 1 / 32 with hc_def
+    set c : ℝ := Real.exp 1 / 64 with hc_def
     have hc : 0 < c := by rw [hc_def]; positivity
     have hcn : c ≠ 0 := hc.ne'
     have hc1 : c ≤ 1 := by
       have h9 := Real.exp_one_lt_d9
-      rw [hc_def, div_le_one (by norm_num : (0:ℝ) < 32)]
+      rw [hc_def, div_le_one (by norm_num : (0:ℝ) < 64)]
       linarith
     have hkc : (1:ℝ) ≤ (k:ℝ)/c := by
       rw [le_div_iff₀ hc]
@@ -111,7 +111,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
       exact add_nonneg (mul_nonneg (by norm_num) (sq_nonneg _))
         (mul_nonneg (mul_nonneg (by norm_num) hc.le) hM0)
     set B₂ : ℝ := (4*(k:ℝ) + Real.sqrt D)/(2*c) + 1 with hB2_def
-    set Lmin : ℝ := max 16
+    set Lmin : ℝ := max 100000
       (max ((Real.log C + (k:ℝ)*Real.log 10)/(14*(k:ℝ)) + 1) (B₂^2))
       with hLmin_def
     set z : ℕ := ⌈Real.exp (Real.exp Lmin)⌉₊ + 17 with hz_def
@@ -155,7 +155,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         rwa [Real.log_exp] at h2
       have h3 := Real.log_lt_log (Real.exp_pos _) h1
       rwa [Real.log_exp] at h3
-    have hll16 : ∀ x : ℕ, z ≤ x → (16:ℝ) ≤ Real.log (Real.log (x:ℝ)) := by
+    have hll16 : ∀ x : ℕ, z ≤ x → (100000:ℝ) ≤ Real.log (Real.log (x:ℝ)) := by
       intro x hxz
       exact le_trans (le_max_left _ _) (hLL_of_ge x hxz).le
     have h14ineq : ∀ x : ℕ, z ≤ x →
@@ -187,7 +187,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         exact_mod_cast h17
       have hx1 : (1:ℝ) < (x:ℝ) := by linarith
       have hlogxpos : 0 < Real.log (x:ℝ) := Real.log_pos hx1
-      have hll16x : (16:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
+      have hll16x : (100000:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
       have hlogx1 : (1:ℝ) ≤ Real.log (x:ℝ) := by
         have e : (1:ℝ) ≤ Real.exp (Real.log (Real.log (x:ℝ))) :=
           Real.one_le_exp_iff.mpr (by linarith)
@@ -285,7 +285,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         exact_mod_cast h17
       have hx1 : (1:ℝ) < (x:ℝ) := by linarith
       have hlogxpos : 0 < Real.log (x:ℝ) := Real.log_pos hx1
-      have hll16x : (16:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
+      have hll16x : (100000:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
       have hlogx1 : (1:ℝ) ≤ Real.log (x:ℝ) := by
         have e : (1:ℝ) ≤ Real.exp (Real.log (Real.log (x:ℝ))) :=
           Real.one_le_exp_iff.mpr (by linarith)
@@ -349,7 +349,8 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         have h2 : Real.log 9 ≤ Real.log (Real.exp 16) :=
           Real.log_le_log (by norm_num) h1
         rw [Real.log_exp] at h2
-        linarith [h2, hll16x]
+        have h16 : (16:ℝ) ≤ Real.log (Real.log (x:ℝ)) := by linarith [hll16x]
+        linarith [h2, h16]
       have hlln1le : Real.log (Real.log ((n+1:ℕ):ℝ)) ≤
           3 * Real.log (Real.log (x:ℝ)) := by linarith [hlln1, hlog9]
       have hllpos : (0:ℝ) < Real.log (Real.log (x:ℝ)) := by linarith [hll16x]

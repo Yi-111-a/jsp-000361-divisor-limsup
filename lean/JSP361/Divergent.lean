@@ -38,12 +38,12 @@ every `k`.
 * The main theorem for `C ≤ 0` (any `k`) and for `k = 0` (any `C`): products
   of finite subsets of `A ∖ {0}` already give arbitrarily large `dA`.
 
-## The gap (single remaining placeholder)
+## The `k ≥ 1`, `C > 0` case (closed via CaseA/CaseB below)
 
 For `k ≥ 1` and `C > 0` the statement is the content of ErSa80 Part I
 (`k = 1`: `lim sup D_A/f_A = ∞`, their Theorem 6) sharpened in Part II to
 `lim sup D_A(x)/exp(c·(log f_A(x))²) = ∞`, which dominates every `C·f_A^k`.
-The missing mathematics, assuming `dA(n) ≤ C·recipSum(n+1)^k` for all `n`:
+The mathematics, assuming `dA(n) ≤ C·recipSum(n+1)^k` for all `n`:
 
 1. *Partial summation*: `recipSum A x = N_A(x)/x + ∫_{1}^{x} N_A(t)/t² dt`
    (with `N_A` the counting function).  Hence divergence forces
@@ -80,8 +80,9 @@ y/(log y)²` i.o., `JSP361/Density.lean`), this forces `recipSum`'s mass
 into the bands `(t, e^{(log4+4)·t}]` and forces most elements to carry a
 prime-power factor `> √y` (see `JSP361/RoughElem.lean` for the
 `a ∣ lcmUpto t ↔ ∀ p^e ‖ a, p^e ≤ t` characterization).  The remaining
-branch is exactly the multiplicatively-dense regime handled by ErSa80
-Part II via Brun-type sieve estimates absent from Mathlib.
+branch is the multiplicatively-dense regime handled by ErSa80
+Part II; it is closed by `divisor_limsup_caseA` / `divisor_limsup_caseB`
+(`JSP361/CaseA.lean`, `JSP361/CaseB.lean`, via `JSP361/ErSaCore.lean`).
 -/
 
 namespace JSP361
@@ -227,9 +228,9 @@ private theorem div_counter_bound_lcm (A : Set ℕ) {k : ℕ} {C : ℝ}
 reciprocal sum, `max_{n<x} dA A n / recipSum A x ^ k` is unbounded for
 every `k`.
 
-Proved here for `C ≤ 0` (any `k`) and `k = 0` (any `C`).  The remaining
-case `k ≥ 1`, `C > 0` is the Erdős–Sárközy core and is left as the single
-remaining gap; see the file header for the precise missing argument. -/
+Proved here for `C ≤ 0` (any `k`) and `k = 0` (any `C`) directly; the
+remaining case `k ≥ 1`, `C > 0` is the Erdős–Sárközy core, dispatched to
+`divisor_limsup_caseA` / `divisor_limsup_caseB` (see the file header). -/
 theorem divisor_set_limsup_divergent (A : Set ℕ) (hA : A.Infinite)
     (hU : ∀ M : ℝ, ∃ x : ℕ, M < recipSum A x) (k : ℕ) (C : ℝ) :
     ∃ x : ℕ, ∃ n : ℕ, n < x ∧ C * recipSum A x ^ k < (dA A n : ℝ) := by

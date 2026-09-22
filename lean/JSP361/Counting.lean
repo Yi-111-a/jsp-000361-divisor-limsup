@@ -123,6 +123,6 @@ theorem recipSum_le_log (A : Set ℕ) (x : ℕ) :
         Finset.sum_le_sum_of_subset_of_nonneg hsub (fun a _ _ => by positivity)
     _ = (harmonic (x - 1) : ℝ) := hsum
     _ ≤ 1 + Real.log ↑(x - 1) := harmonic_le_one_add_log (x - 1)
-    _ ≤ 1 + Real.log ↑x := add_le_add_left hlog 1
+    _ ≤ 1 + Real.log ↑x := by linarith [hlog]
 
 end JSP361

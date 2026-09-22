@@ -199,7 +199,7 @@ theorem exists_record_small_loglog (A : Set ℕ) (hU : ∀ M : ℝ, ∃ x, M < r
 
 /-- **Case B reduces to a `dA` win at record scales.** Under the Case-B
 hypothesis `hB`, if every nonneg threshold `F` with small
-`log log (recordX F)` admits a counter `n < recordX F` beating
+`log log (recordX F)` has a counter `n < recordX F` beating
 `C (F+1)^k`, the limsup statement holds. -/
 theorem divisor_limsup_caseB_reduces (A : Set ℕ) (hA : A.Infinite)
     (hU : ∀ M : ℝ, ∃ x, M < recipSum A x)
