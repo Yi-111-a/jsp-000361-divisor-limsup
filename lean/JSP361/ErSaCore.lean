@@ -65,6 +65,7 @@ namespace JSP361
 open Finset
 open scoped Classical
 
+set_option maxHeartbeats 3200000 in
 /-- **ErSa80 Part II core.**  At a scale `x` with
 `f(x) = recipSum A x > exp(√(log log x))`, some `n ≤ exp(8 (log x)²)` has
 `dA A n > exp((e/64)·(log f(x))²)`.  (Constant `e/64` chosen for formalization
@@ -100,10 +101,10 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     by_contra h
     push_neg at h
     interval_cases x
-    · rw [hLd] at hL
+    · rw [hLd, hlxd] at hL
       simp only [Nat.cast_zero, Real.log_zero] at hL
       norm_num at hL
-    · rw [hLd] at hL
+    · rw [hLd, hlxd] at hL
       simp only [Nat.cast_one, Real.log_one, Real.log_zero] at hL
       norm_num at hL
   have hxr : (0:ℝ) < (x:ℝ) := by exact_mod_cast (by omega : 0 < x)
@@ -221,7 +222,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
   have hE'_le : E' ≤ 4 * L + 20 := by
     have h1 : E' ≤ ∑ p ∈ Nat.primesBelow x, (1:ℝ)/p := by
       rw [hE'd]
-      exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _)
+      exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
         fun p _ _ ↦ by positivity
     have h2 := sum_prime_recip_le_loglog x hx16
     rw [← hLd] at h2
@@ -335,7 +336,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
   have hE''le : E'' ≤ 8 * L + 24 := by
     have h1 : E'' ≤ ∑ p ∈ Nat.primesBelow (u+1), (1:ℝ)/p := by
       rw [hE''d]
-      exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _)
+      exact Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
         fun p _ _ ↦ by positivity
     have h2 : ∑ p ∈ Nat.primesBelow (u+1), (1:ℝ)/p ≤
         4 * Real.log (Real.log ((u+1:ℕ):ℝ)) + 20 :=
@@ -369,7 +370,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     linarith
   have hPY1 : (1:ℝ) ≤ PY := by
     rw [hPYd]
-    apply Finset.one_le_prod
+    apply Finset.one_le_prod₀
     intro p hp
     have hp2 : (2:ℝ) ≤ (p:ℝ) := by
       exact_mod_cast (Nat.prime_of_mem_primesBelow hp).two_le
@@ -442,7 +443,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
       have e3 : Real.log (Real.sqrt (Real.sqrt (Real.sqrt L))) = Real.log L / 8 := by
         rw [Real.log_sqrt (Real.sqrt_nonneg _), e2]; ring
       rw [hsd, Real.log_sqrt (Real.sqrt_nonneg _), e3]; ring
-    have hlogL' : Real.log L ≤ 16 * s := by linarith [hlogs, hlogs16]
+    have hlogL' : Real.log L ≤ 16 * (s - 1) := by linarith [hlogs, hlogs16]
     have hs7 : (128:ℝ) ≤ s ^ 7 := by
       calc (128:ℝ) = 2 ^ 7 := by norm_num
         _ ≤ s ^ 7 := pow_le_pow_left₀ (by norm_num) hsge2 7
@@ -450,7 +451,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
       calc (128:ℝ) * s ≤ s ^ 7 * s :=
             mul_le_mul_of_nonneg_right hs7 (by linarith : (0:ℝ) ≤ s)
         _ = s ^ 8 := by ring
-    calc 8 * Real.log L + 61 ≤ 8 * (16 * s) + 61 := by linarith [hlogL']
+    calc 8 * Real.log L + 61 ≤ 8 * (16 * (s - 1)) + 61 := by linarith [hlogL']
       _ = 128 * s - 67 := by ring
       _ ≤ s ^ 8 := by linarith [hstep]
       _ = Real.sqrt L := hs8
@@ -520,11 +521,11 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     intro a
     simp only [Finset.mem_filter, Finset.mem_range]
     constructor
-    · rintro ⟨hax, hmem, hΩ⟩
-      obtain ⟨haA, ha0⟩ := Set.mem_diff.mp hmem
+    · rintro ⟨⟨hax, hmem⟩, hΩ⟩
+      obtain ⟨haA, ha0⟩ := hmem
       exact ⟨hax, haA, hΩ⟩
     · rintro ⟨hax, haA, hΩ⟩
-      refine ⟨hax, ?_, hΩ⟩
+      refine ⟨⟨hax, ?_⟩, hΩ⟩
       constructor
       · exact haA
       · rw [Set.mem_singleton_iff]
@@ -549,11 +550,11 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
         intro a ha
         obtain ⟨haT, hnot⟩ := Finset.mem_filter.mp ha
         obtain ⟨hax, hmem⟩ := Finset.mem_filter.mp haT
-        obtain ⟨haA, ha0⟩ := Set.mem_diff.mp hmem
+        obtain ⟨haA, ha0⟩ := hmem
         have ha0' : a ≠ 0 := fun h0 ↦ ha0 (Set.mem_singleton_iff.mpr h0)
         have hlt : ∑ p ∈ a.primeFactors.filter (fun p ↦ Y < p),
             a.factorization p ≤ t := by omega
-        rw [hOm_eq a ha0' hax] at hlt
+        rw [hOm_eq a ha0' (Finset.mem_range.mp hax)] at hlt
         rw [if_pos hlt]
       rw [Finset.sum_congr rfl hcongr]
       apply Finset.sum_le_sum_of_subset_of_nonneg
@@ -627,7 +628,6 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
   have hzz : 2 * z * E'' = ((r * (t + 1) : ℕ) : ℝ) := by
     rw [hzd]
     field_simp
-    ring
   have hz1 : (1:ℝ) ≤ z := by
     rw [hzd, one_le_div (by linarith [hE''pos] : (0:ℝ) < 2 * E'')]
     have h2 : (2:ℝ) * E'' ≤ 16 * L + 48 := by linarith [hE''le]
@@ -653,7 +653,6 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     have h2z : 2 * z = ((r * (t + 1) : ℕ) : ℝ) / E'' := by
       rw [hzd]
       field_simp
-      ring
     have h1 : ((r * (t + 1) : ℕ) : ℝ) / E'' ≤ ((r * (t + 1) : ℕ) : ℝ) / (L/2) := by
       rw [div_le_div_iff₀ hE''pos (by linarith : (0:ℝ) < L/2)]
       exact mul_le_mul_of_nonneg_left hE''ge hsr_pos.le
@@ -662,7 +661,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
       have h3 : ((r * (t + 1) : ℕ) : ℝ) ≤ lx * (7 * L) := by
         rw [Nat.cast_mul]
         have ht7 : ((t + 1 : ℕ) : ℝ) ≤ 7 * L := by
-          have h : ((t + 1 : ℕ) : ℝ) = (t:ℝ) + 1 := by push_cast
+          have h : ((t + 1 : ℕ) : ℝ) = (t:ℝ) + 1 := by push_cast; ring
           rw [h]
           linarith [htS, hS_le, hL]
         have hmul := mul_le_mul hr_le ht7 (Nat.cast_nonneg (t+1)) hlx_pos.le
@@ -734,7 +733,6 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
         (2 * PY * Real.exp (((r * (t + 1)) : ℕ) : ℝ)) := by
     rw [Real.rpow_neg hzpos.le]
     field_simp
-    ring
   rw [hfrac] at hkey
   -- take logarithms
   have hnumpos : (0:ℝ) < fst ^ r * z ^ (((r * (t + 1)) : ℕ) : ℝ) :=
@@ -750,7 +748,6 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
         Real.log_mul (mul_ne_zero two_ne_zero hPY0) he0,
         Real.log_mul two_ne_zero hPY0,
         Real.log_pow, Real.log_rpow hzpos, Real.log_exp]
-    ring
   have hdApos : (0:ℝ) < (dA A n : ℝ) := by
     by_contra h
     push_neg at h
@@ -758,18 +755,19 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     have hz : (dA A n : ℝ) ^ r = 0 := by rw [h0]; exact zero_pow (by omega : r ≠ 0)
     have hpos : (0:ℝ) < fst^r * z^(((r * (t + 1)) : ℕ) : ℝ) /
         (2 * PY * Real.exp (((r * (t + 1)) : ℕ) : ℝ)) := div_pos hnumpos hdenpos
-    linarith [hkey, hz, hpos]
+    linarith only [hkey, hz, hpos]
   have hlogdAr : (r:ℝ) * Real.log (dA A n : ℝ) ≥
       (r:ℝ) * Real.log fst + (((r * (t + 1)) : ℕ) : ℝ) * Real.log z
         - (Real.log 2 + Real.log PY + (((r * (t + 1)) : ℕ) : ℝ)) := by
     have h1 : Real.log ((dA A n : ℝ) ^ r) = (r:ℝ) * Real.log (dA A n : ℝ) :=
       Real.log_pow _ _
     have h2 := Real.log_le_log (div_pos hnumpos hdenpos) hkey
-    linarith [h1, h2, hlogK]
+    linarith only [h1, h2, hlogK]
   have hsr : (((r * (t + 1)) : ℕ) : ℝ) / (r:ℝ) = (t:ℝ) + 1 := by
     rw [Nat.cast_mul]
     rw [mul_div_cancel_left₀ _ hrpos.ne']
     push_cast
+    ring
   have h3eq : ((r:ℝ) * Real.log fst + (((r * (t + 1)) : ℕ) : ℝ) * Real.log z
         - (Real.log 2 + Real.log PY + (((r * (t + 1)) : ℕ) : ℝ))) / (r:ℝ)
       = Real.log fst + ((t:ℝ) + 1) * (Real.log z - 1)
@@ -782,38 +780,40 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
         - (Real.log 2 + Real.log PY) / (r:ℝ) := by
     have h := (div_le_div_iff_of_pos_right hrpos).mpr hlogdAr
     rw [mul_div_cancel_left₀ _ hrpos.ne'] at h
-    linarith [h, h3eq]
+    linarith only [h, h3eq]
   have hlogfst : lf - Real.log 2 ≤ Real.log fst := by
     have h : Real.log (F/2) ≤ Real.log fst :=
       Real.log_le_log (by linarith [hFpos]) hfst_ge
     have h2 : Real.log (F/2) = lf - Real.log 2 := by
       rw [Real.log_div hFpos.ne' two_ne_zero, ← hlfd]
-    linarith
+    linarith only [h, h2]
   have htW : (t:ℝ) * (L - Real.log L - 8) + (L - Real.log L - 5)
       ≤ ((t:ℝ) + 1) * (Real.log z - 1) := by
-    have h1 : L - Real.log L - 5 ≤ Real.log z - 1 := by linarith [hlogz]
+    have h1 : L - Real.log L - 5 ≤ Real.log z - 1 := by linarith only [hlogz]
     have h2 := mul_le_mul_of_nonneg_left h1 (by linarith : (0:ℝ) ≤ (t:ℝ) + 1)
     have h3 : (t:ℝ) * (L - Real.log L - 8) + (L - Real.log L - 5)
         ≤ ((t:ℝ) + 1) * (L - Real.log L - 5) := by
-      nlinarith [Nat.cast_nonneg t]
-    linarith [h2, h3]
+      nlinarith [(Nat.cast_nonneg t : (0:ℝ) ≤ (t:ℝ))]
+    linarith only [h2, h3]
   have hdiv : (Real.log 2 + Real.log PY) / (r:ℝ) ≤ 31 + 4 * Real.log L := by
     have h5 : (0:ℝ) ≤ Real.log 2 + Real.log PY := by
       have h6 : (0:ℝ) ≤ Real.log PY := Real.log_nonneg hPY1
-      linarith [Real.log_two_gt_d9]
+      linarith only [h6, Real.log_two_gt_d9]
     calc (Real.log 2 + Real.log PY)/(r:ℝ) ≤ Real.log 2 + Real.log PY :=
           div_le_self h5 hrr
-      _ ≤ 31 + 4 * Real.log L := by linarith [hlogPY, Real.log_two_lt_d9]
+      _ ≤ 31 + 4 * Real.log L := by linarith only [hlogPY, Real.log_two_lt_d9]
   have hfinal : Real.exp 1 / 64 * lf ^ 2 < Real.log (dA A n : ℝ) := by
     have hcomb : Real.log (dA A n : ℝ) ≥
         lf - Real.log 2 + ((t:ℝ) * (L - Real.log L - 8) + (L - Real.log L - 5))
-          - (31 + 4 * Real.log L) := by linarith [hlogdA, hlogfst, htW, hdiv]
+          - (31 + 4 * Real.log L) := by linarith only [hlogdA, hlogfst, htW, hdiv]
     -- `L ≥ 5·log L + 40` via `L = √L·√L ≥ 256·√L ≥ 256·(4·log L + 61)/8`-style
     have hsqrtL' : Real.sqrt L * Real.sqrt L = L := Real.mul_self_sqrt hLpos.le
     have h256 : 256 * Real.sqrt L ≤ L := by
-      nlinarith [hsqrtL', hsqrtL, Real.sqrt_nonneg L]
-    have hLdom : 5 * Real.log L + 40 ≤ L := by linarith [h256, hlogL]
-    linarith [hcomb, hgain, hlf_low, hsqrtL, hlogL, hL, hFpos, hLdom,
+      calc 256 * Real.sqrt L ≤ Real.sqrt L * Real.sqrt L :=
+            mul_le_mul_of_nonneg_right hsqrtL (Real.sqrt_nonneg L)
+        _ = L := hsqrtL'
+    have hLdom : 5 * Real.log L + 40 ≤ L := by linarith only [h256, hlogL, hsqrtL]
+    linarith only [hcomb, hgain, hlf_low, hsqrtL, hlogL, hL, hFpos, hLdom,
       Real.log_two_lt_d9, Real.log_nonneg (by norm_num : (1:ℝ) ≤ (16:ℝ))]
   -- ===== assemble =====
   refine ⟨n, ?_, ?_⟩
@@ -826,7 +826,10 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
     calc (n:ℝ) ≤ (u:ℝ) := hnle
       _ = Real.exp ((r:ℝ) * lx) := hux
       _ ≤ Real.exp (8 * lx ^ 2) :=
-          Real.exp_le_exp.mpr (by nlinarith [hr_le, hlx_pos, hrpos, sq_nonneg lx])
+          Real.exp_le_exp.mpr (by
+            have h1 : (r:ℝ) * lx ≤ lx * lx :=
+              mul_le_mul_of_nonneg_right hr_le hlx_pos.le
+            linarith only [h1, sq_nonneg lx])
   · calc Real.exp (Real.exp 1 / 64 * lf ^ 2)
         < Real.exp (Real.log (dA A n : ℝ)) := Real.exp_lt_exp.mpr hfinal
       _ = (dA A n : ℝ) := Real.exp_log hdApos

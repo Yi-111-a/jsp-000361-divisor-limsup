@@ -110,7 +110,7 @@ private theorem sum_range_inv_sq_le_aux (J : ℕ) (hJ : 1 ≤ J) :
         rw [h1]
         exact one_div_le_one_div_of_le
           (mul_pos hn' (by positivity)) (by nlinarith [hn'])
-      have hcast : ((n + 1 : ℕ) : ℝ)⁻¹ = ((n : ℝ) + 1)⁻¹ := by push_cast
+      have hcast : ((n + 1 : ℕ) : ℝ)⁻¹ = ((n : ℝ) + 1)⁻¹ := by push_cast; ring
       rw [hcast]
       linarith [ih, hstep]
 
@@ -180,7 +180,7 @@ theorem exists_countA_ge_div_log_sq (A : Set ℕ)
       push_cast
       ring
     rw [e1, e2, div_div, mul_div_mul_right _ _ hne2,
-      mul_comm ((j : ℝ) + 1) ^ 2 (Real.log 2) ^ 2, div_mul_div_comm, mul_one]
+      mul_comm (((j : ℝ) + 1) ^ 2) ((Real.log 2) ^ 2), div_mul_div_comm, mul_one]
   -- Uniform bound on `recipSum A (2^J)` for every `J`.
   have hbound : ∀ J : ℕ, recipSum A (2 ^ J) ≤
       2 * J₀ + (2 / (Real.log 2) ^ 2) * 2 := by
@@ -238,9 +238,9 @@ theorem exists_countA_ge_div_log_sq (A : Set ℕ)
           ∑ j ∈ Finset.range J, (1 : ℝ) / ((j : ℝ) + 1) ^ 2 :=
           add_le_add hearly hlate
       _ ≤ 2 * J₀ + (2 / (Real.log 2) ^ 2) * 2 :=
-          add_le_add_left
+          add_le_add_right
             (mul_le_mul_of_nonneg_left (sum_range_inv_sq_le J)
-              (div_nonneg (by norm_num) hc_pos.le)) _
+              (div_nonneg (by norm_num : (0 : ℝ) ≤ 2) hc_pos.le)) _
   -- But `recipSum` is unbounded, contradiction.
   obtain ⟨x', hx'⟩ := hU (2 * J₀ + (2 / (Real.log 2) ^ 2) * 2)
   have hJx : x' < 2 ^ (Nat.log 2 x' + 1) :=

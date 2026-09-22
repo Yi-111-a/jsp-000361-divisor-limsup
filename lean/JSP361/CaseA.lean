@@ -45,7 +45,7 @@ private theorem rough_iff_not_smooth {a s : ℕ} :
   · intro h
     push_neg at h
     obtain ⟨p, hp, e, he, hdvd, hle⟩ := h
-    exact ⟨p, hp, e, he, Nat.lt_of_not_le hle, hdvd⟩
+    exact ⟨p, hp, e, he, hle, hdvd⟩
 
 /-! ### Fiber / cofactor lemmas -/
 
@@ -68,7 +68,7 @@ private theorem exists_pp_fiber_local {S : Finset ℕ}
     exact (hp a ha).choose_spec
   have hqs : ∀ a ∈ S, s + 1 ≤ q a := fun a ha ↦ Nat.succ_le_of_lt (hq_spec a ha).1
   have hqpos : ∀ a ∈ S, 0 < q a :=
-    fun a ha ↦ lt_of_le_of_lt (Nat.succ_pos s) (hq_spec a ha).1
+    fun a ha ↦ lt_of_le_of_lt (Nat.zero_le s) (hq_spec a ha).1
   set T := Finset.range (y / s + 1) with hTdef
   set fib : ℕ → Finset ℕ := fun b ↦ S.filter (fun a ↦ a / q a = b) with hfibdef
   have hfle : ∀ a ∈ S, a / q a ≤ y / s := by
@@ -90,13 +90,17 @@ private theorem exists_pp_fiber_local {S : Finset ℕ}
     have h2 : ∑ b ∈ T, (fib b).card ≤ (y / s + 1) * F.card := by
       calc ∑ b ∈ T, (fib b).card ≤ ∑ _b ∈ T, F.card :=
             Finset.sum_le_sum fun b hb ↦ hmax b hb
-        _ = T.card * F.card := by rw [Finset.sum_const, nsmul_eq_mul]
+        _ = T.card * F.card := by rw [Finset.sum_const, nsmul_eq_mul, Nat.cast_id]
         _ = (y / s + 1) * F.card := by rw [hTdef, Finset.card_range]
     exact h1.trans (h2.trans_eq (mul_comm _ _))
   have hFne : F.Nonempty := by
     have hScard : 0 < S.card := Finset.card_pos.mpr hSne
     rw [← Finset.card_pos]
-    omega
+    rcases Nat.eq_zero_or_pos F.card with hF | hF
+    · exfalso
+      rw [hF, Nat.zero_mul] at hcard
+      omega
+    · exact hF
   obtain ⟨a₀, ha₀⟩ := hFne
   have ha₀mem : a₀ ∈ fib m₀ := hFdef ▸ ha₀
   have ha₀S : a₀ ∈ S := Finset.filter_subset _ _ ha₀mem
@@ -182,8 +186,11 @@ private theorem ev_log_pow_le (r s ε : ℝ) (hs : 0 < s) (hε : 0 < ε) :
   filter_upwards [(isLittleO_iff.mp h) hε, eventually_ge_atTop 1] with y hy hy1
   have hly : (0:ℝ) ≤ Real.log (y:ℝ) := Real.log_nonneg (by exact_mod_cast hy1)
   have hyR : (0:ℝ) ≤ (y:ℝ)^s := Real.rpow_nonneg (Nat.cast_nonneg _) _
-  rwa [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg (Real.rpow_nonneg hly r),
-    abs_of_nonneg hyR] at hy
+  have hlogr : (0:ℝ) ≤ Real.log (y:ℝ)^r := Real.rpow_nonneg hly r
+  have hy' := hy
+  simp only [Function.comp_apply, Real.norm_eq_abs, abs_of_nonneg hlogr,
+    abs_of_nonneg hyR] at hy'
+  exact hy'
 
 /-! ### The five asymptotic bounds -/
 
@@ -209,7 +216,9 @@ private theorem ev_smooth_bound_caseA (k : ℕ) (hk : 1 ≤ k) (C : ℝ) (hC : 0
     congr 1
     rw [← div_div, div_mul_cancel₀ _ hk0]
   have h14 : (0:ℝ) ≤ (y:ℝ)^((1:ℝ)/4) := Real.rpow_nonneg (Nat.cast_nonneg _) _
-  have h2l : 2*(Real.log (y:ℝ))^2 ≤ (y:ℝ)^((1:ℝ)/4) := by linarith [hlog2]
+  have h2l : 2*(Real.log (y:ℝ))^2 ≤ (y:ℝ)^((1:ℝ)/4) := by
+    rw [Real.rpow_two] at hlog2
+    linarith [hlog2]
   have e14 : (y:ℝ)^((1:ℝ)/4)*(y:ℝ)^((1:ℝ)/4) = (y:ℝ)^((1:ℝ)/2) := by
     rw [← Real.rpow_add hypos]
     congr 1
@@ -248,12 +257,14 @@ private theorem ev_fiber_size_caseA (k : ℕ) (hk : 1 ≤ k) :
   have ev_ll : ∀ᶠ y:ℕ in atTop,
       Real.log (Real.log (y:ℝ)) ≤ (Real.log (y:ℝ))^((1:ℝ)/2) := by
     filter_upwards [(isLittleO_iff.mp hll) one_pos,
-      tendsto_logNat.eventually_ge_atTop 1] with y hy hyl1
-    have hly : (0:ℝ) ≤ Real.log (y:ℝ) := Real.log_nonneg hyl1
+      tendsto_logNat.eventually_ge_atTop 1, eventually_ge_atTop 1] with y hy hyl1 hy1
+    have hly : (0:ℝ) ≤ Real.log (y:ℝ) := Real.log_nonneg (by exact_mod_cast hy1)
     have hll0 : (0:ℝ) ≤ Real.log (Real.log (y:ℝ)) := Real.log_nonneg hyl1
     have hyr : (0:ℝ) ≤ (Real.log (y:ℝ))^((1:ℝ)/2) := Real.rpow_nonneg hly _
-    rwa [Real.norm_eq_abs, Real.norm_eq_abs, abs_of_nonneg hll0, abs_of_nonneg hyr,
-      one_mul] at hy
+    have hy' := hy
+    simp only [Function.comp_apply, Real.norm_eq_abs, abs_of_nonneg hll0,
+      abs_of_nonneg hyr, one_mul] at hy'
+    exact hy'
   have h16log2 := tendsto_logNat.eventually_ge_atTop (16*(k:ℝ)*Real.log 2)
   have hlog2ge := tendsto_logNat.eventually_ge_atTop 2
   have hsqrt32 := tendsto_logNat.eventually_ge_atTop ((32*(k:ℝ)^2)^2)
@@ -268,11 +279,27 @@ private theorem ev_fiber_size_caseA (k : ℕ) (hk : 1 ≤ k) :
     have hnn : (0:ℝ) ≤ 2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ))) := by positivity
     calc (1:ℝ) = Real.exp 0 := Real.exp_zero.symm
       _ ≤ _ := Real.exp_le_exp.mpr hnn
-  -- `2·llfun ≤ log y` via `log x ≤ x - 1` at `x = log y`.
+  -- `2·llfun ≤ log y` via `loglog y ≤ √(log y)` and `√(log y) ≥ 2`.
   have h2ll : 2*Real.log (Real.log (y:ℝ)) ≤ Real.log (y:ℝ) := by
-    have h1 : Real.log (Real.log (y:ℝ)) ≤ Real.log (y:ℝ) - 1 :=
-      Real.log_le_sub_one_of_pos hlogpos
-    linarith [h1, hl2]
+    have hk1 : (1:ℝ) ≤ (k:ℝ) := by exact_mod_cast hk
+    have h1024 : (1024:ℝ) ≤ (32*(k:ℝ)^2)^2 := by
+      calc (1024:ℝ) = (32*1^2)^2 := by norm_num
+        _ ≤ (32*(k:ℝ)^2)^2 :=
+            pow_le_pow_left₀ (by norm_num)
+              (mul_le_mul_of_nonneg_left
+                (pow_le_pow_left₀ zero_le_one hk1 2) (by norm_num)) 2
+    have hL4 : (4:ℝ) ≤ Real.log (y:ℝ) := by linarith [h32, h1024]
+    have hsqrt2le : (2:ℝ) ≤ Real.sqrt (Real.log (y:ℝ)) := by
+      have h := Real.sqrt_le_sqrt hL4
+      rwa [show (4:ℝ) = 2^2 by norm_num, Real.sqrt_sq (by norm_num)] at h
+    have hloghalf : Real.log (Real.log (y:ℝ)) ≤ Real.sqrt (Real.log (y:ℝ)) := by
+      rw [Real.sqrt_eq_rpow]; exact hll'
+    have hfin : 2*Real.sqrt (Real.log (y:ℝ)) ≤ Real.log (y:ℝ) :=
+      calc 2*Real.sqrt (Real.log (y:ℝ))
+          ≤ Real.sqrt (Real.log (y:ℝ))*Real.sqrt (Real.log (y:ℝ)) :=
+            mul_le_mul_of_nonneg_right hsqrt2le (Real.sqrt_nonneg _)
+        _ = Real.log (y:ℝ) := Real.mul_self_sqrt hlogpos.le
+    linarith [hloghalf, hfin]
   have hsqrt1 : Real.sqrt (2*Real.log (Real.log (y:ℝ))) ≤ Real.sqrt (Real.log (y:ℝ)) :=
     Real.sqrt_le_sqrt h2ll
   have hsqrt2 : 32*(k:ℝ)^2 ≤ Real.sqrt (Real.log (y:ℝ)) := by
@@ -305,9 +332,15 @@ private theorem ev_fiber_size_caseA (k : ℕ) (hk : 1 ≤ k) :
     rw [← Real.log_le_log_iff (by positivity) harg2]
     rw [Real.log_rpow hypos, Real.log_mul (by norm_num) (Real.exp_pos _).ne',
       Real.log_exp]
-    linarith [ha, hb]
+    have hcoef : (1/(8*(k:ℝ)))*Real.log (y:ℝ)
+        = (1/(16*(k:ℝ)))*Real.log (y:ℝ) + (1/(16*(k:ℝ)))*Real.log (y:ℝ) := by
+      have hk0 : (k:ℝ) ≠ 0 := (Nat.cast_pos.mpr hk).ne'
+      field_simp
+      ring
+    linarith [ha, hb, hcoef]
   -- `4·log²y ≤ y^{1/(8k)}`.
   have h4l : 4*(Real.log (y:ℝ))^2 ≤ (y:ℝ)^(1/(8*(k:ℝ))) := by
+    rw [Real.rpow_two] at hlogsq
     linarith [hlogsq]
   have hmul : (Real.exp (2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ)))) + 1) *
       (4*(Real.log (y:ℝ))^2) ≤ (y:ℝ)^(1/(4*(k:ℝ))) := by
@@ -323,9 +356,9 @@ private theorem ev_fiber_size_caseA (k : ℕ) (hk : 1 ≤ k) :
       _ = (y:ℝ)^((1/(8*(k:ℝ)))+(1/(8*(k:ℝ)))) := (Real.rpow_add hypos _ _).symm
       _ = (y:ℝ)^(1/(4*(k:ℝ))) := by
           congr 1
-          rw [← two_mul, ← div_div]
-          congr 1
+          have hk0 : (k:ℝ) ≠ 0 := (Nat.cast_pos.mpr hk).ne'
           field_simp
+          ring
   rw [le_div_iff₀ (mul_pos (by norm_num) (pow_pos hlogpos 2))]
   exact hmul
 
@@ -356,7 +389,7 @@ private theorem ev_loglog_witness_caseA (k : ℕ) (hk : 1 ≤ k) :
           mul_le_mul hEge1 hyl1 zero_le_one (le_trans zero_le_one hEge1)
   have harg : 2*Real.exp (2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ)))) *
       Real.log (y:ℝ) + 1
-      ≤ 3*(Real.exp (2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ)))) * Real.log (y:ℝ)) := by
+      ≤ 3*Real.exp (2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ))))*Real.log (y:ℝ) := by
     linarith [hEl]
   have hlog3 : Real.log (2*Real.exp (2*(k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ)))) *
       Real.log (y:ℝ) + 1)
@@ -566,12 +599,16 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
   have hyqk : (1:ℝ) ≤ (y:ℝ)^((1:ℝ)/(4*(k:ℝ))) :=
     Real.one_le_rpow hyR1 (by positivity)
   have hs2 : (s:ℝ) ≤ 2*(y:ℝ)^((1:ℝ)/(4*(k:ℝ))) := by
-    have h := (Nat.ceil_lt_add_one (Real.rpow_nonneg (Nat.cast_nonneg _) _)).le
+    have h : (s:ℝ) < (y:ℝ)^((1:ℝ)/(4*(k:ℝ))) + 1 := by
+      rw [hsdef]
+      exact Nat.ceil_lt_add_one (Real.rpow_nonneg (Nat.cast_nonneg _) _)
     linarith [h, hyqk]
   have h2cs : 2 + (Real.log 4 + 4)*(s:ℝ)
       ≤ 4*(Real.log 4 + 4)*(y:ℝ)^((1:ℝ)/(4*(k:ℝ))) := by
     have h1 : (1:ℝ) ≤ (Real.log 4 + 4)*(y:ℝ)^((1:ℝ)/(4*(k:ℝ))) := by
-      have hc41 : (1:ℝ) ≤ Real.log 4 + 4 := by linarith [hc4pos]
+      have hc41 : (1:ℝ) ≤ Real.log 4 + 4 := by
+        have hnn := Real.log_nonneg (show (1:ℝ) ≤ 4 by norm_num)
+        linarith
       calc (1:ℝ) = 1*1 := by ring
         _ ≤ _ := mul_le_mul hc41 hyqk zero_le_one (by linarith [hc41])
     have h2 : (Real.log 4+4)*(s:ℝ) ≤ (Real.log 4+4)*(2*(y:ℝ)^((1:ℝ)/(4*(k:ℝ)))) :=
@@ -652,12 +689,14 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
         have h2 : (S.card:ℝ) ≤ (F.card:ℝ)*(((y/s + 1 : ℕ)):ℝ) := by
           exact_mod_cast hcardF
         rwa [Nat.cast_add, Nat.cast_one] at h2
-      have h3 : ((y/s : ℕ):ℝ) + 1 ≤ 2*((y:ℝ)/(s:ℝ)) := by
+      have h3 : ((y/s : ℕ):ℝ) + 1 ≤ 2*(y:ℝ)/(s:ℝ) := by
         have hcdl : ((y/s : ℕ):ℝ) ≤ (y:ℝ)/(s:ℝ) := Nat.cast_div_le
         have hyos : (1:ℝ) ≤ (y:ℝ)/(s:ℝ) := by
           rw [le_div_iff₀ hsR, one_mul]
           exact_mod_cast hsy
-        linarith
+        have e : 2*(y:ℝ)/(s:ℝ) = (y:ℝ)/(s:ℝ) + (y:ℝ)/(s:ℝ) := by ring
+        rw [e]
+        exact add_le_add hcdl hyos
       exact h1.trans (mul_le_mul_of_nonneg_left h3 (Nat.cast_nonneg _))
     have hstep2 : (S.card:ℝ)*(s:ℝ) ≤ (F.card:ℝ)*(2*(y:ℝ)) := by
       have h := mul_le_mul_of_nonneg_right hstep1 hsR.le
@@ -669,7 +708,10 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
       linarith [hstep2]
     calc (s:ℝ)/(4*(Real.log (y:ℝ))^2)
         = (((y:ℝ)/(2*(Real.log (y:ℝ))^2))*(s:ℝ))/(2*(y:ℝ)) := by
+          have hy0 : (y:ℝ) ≠ 0 := hypos.ne'
+          have hL0 : Real.log (y:ℝ) ≠ 0 := hlogpos.ne'
           field_simp
+          ring
       _ ≤ (S.card:ℝ)*(s:ℝ)/(2*(y:ℝ)) := by
           apply div_le_div_of_nonneg_right _ (by positivity : (0:ℝ) ≤ 2*(y:ℝ))
           exact mul_le_mul_of_nonneg_right hSlower hsR.le
@@ -699,12 +741,12 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
   have hn_upper : n ≤ y ^ (r + 1) := by
     have h := fiber_prod_le_local (m₀ := m₀) (F := F') (y := y)
       (le_trans hm₀le (Nat.div_le_self _ _))
-      (fun a ha ↦ (hF'prop a ha).2.2.2.2.2)
+      (fun a ha ↦ (hF'prop a ha).2.2.2.2)
     rwa [hF'card, ← hn] at h
   have hn_lower : s ^ r ≤ n := by
     have hprod : (s+1)^r ≤ ∏ a ∈ F', a / m₀ := by
       have h := Finset.prod_le_prod' (s := F') (f := fun _ ↦ s+1) (g := fun a ↦ a / m₀)
-        (fun a ha ↦ Nat.succ_le_of_lt (hF'prop a ha).2.2.2.2.1)
+        (fun a ha ↦ Nat.succ_le_of_lt (hF'prop a ha).2.2.2.1)
       rwa [Finset.prod_const, hF'card] at h
     calc s^r ≤ (s+1)^r := pow_le_pow_left₀ (Nat.zero_le s) (Nat.le_succ s) r
       _ ≤ ∏ a ∈ F', a / m₀ := hprod
@@ -718,10 +760,10 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
     have h3 : ((y:ℝ)^((1:ℝ)/(4*(k:ℝ))))^r = (y:ℝ)^((r:ℝ)/(4*(k:ℝ))) := by
       rw [← Real.rpow_natCast _ r, ← Real.rpow_mul (Nat.cast_nonneg _)]
       congr 1
-      rw [← div_div, div_mul_cancel₀ _ (by exact_mod_cast (by omega : k ≠ 0))]
+      rw [div_mul_eq_mul_div, one_mul]
     have h4 : (y:ℝ)^((r:ℝ)/(4*(k:ℝ)))
         = Real.exp (Real.log (y:ℝ)*((r:ℝ)/(4*(k:ℝ)))) :=
-      (Real.rpow_def_of_pos hypos _).symm
+      Real.rpow_def_of_pos hypos _
     have h5 : Real.exp ((Real.log (y:ℝ)/(8*(k:ℝ)))*E) ≤ (y:ℝ)^((r:ℝ)/(4*(k:ℝ))) := by
       rw [h4]
       apply Real.exp_le_exp.mpr
@@ -735,8 +777,9 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
         mul_nonneg (Nat.cast_nonneg _) hlogpos.le
       calc (Real.log (y:ℝ)/(8*(k:ℝ)))*E = (E*Real.log (y:ℝ))/(8*(k:ℝ)) := by ring
         _ ≤ ((r:ℝ)*Real.log (y:ℝ))/(4*(k:ℝ)) := by
-            rw [div_eq_mul_one_div, div_eq_mul_one_div]
-            exact mul_le_mul hEl hinv (one_div_nonneg.mpr hk8.le) hnn
+            rw [div_le_div_iff₀ hk8 hk4]
+            exact (mul_le_mul_of_nonneg_right hEl hk4.le).trans
+              (mul_le_mul_of_nonneg_left (by linarith [hk4]) hnn)
         _ = Real.log (y:ℝ)*((r:ℝ)/(4*(k:ℝ))) := by ring
     have h6 : (U:ℝ)+1 ≤ (n:ℝ) := hUn.trans (h5.trans (h3 ▸ h2.trans h1))
     have hU1 : U + 1 ≤ n := by exact_mod_cast h6
@@ -794,7 +837,7 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
   have hbig : C * recipSum A (n+1) ^ k + 1 ≤ (r:ℝ) := by
     calc C * recipSum A (n+1) ^ k + 1
         ≤ C * (Real.exp (Real.sqrt (2*Real.log (Real.log (y:ℝ)))))^k + 1 :=
-          add_le_add_right (mul_le_mul_of_nonneg_left hpow hC.le) _
+          add_le_add_left (mul_le_mul_of_nonneg_left hpow hC.le) _
       _ = C * Real.exp ((k:ℝ)*Real.sqrt (2*Real.log (Real.log (y:ℝ)))) + 1 := by
           rw [hexp]
       _ ≤ Real.exp (2*(k:ℝ)*Real.sqrt (Real.log (Real.log (y:ℝ)))) := hfinal

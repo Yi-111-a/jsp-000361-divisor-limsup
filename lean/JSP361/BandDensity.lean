@@ -44,7 +44,9 @@ theorem window_count_ge (A : Set ℕ) {t u : ℕ} (ht : 1 ≤ t) (htu : t ≤ u)
       (Finset.range (t + 1)).filter (· ∈ A \ {0})).card =
       countA A (u + 1) - countA A (t + 1) := by
     rw [Finset.card_sdiff_of_subset hsub, ← countA_eq_card, ← countA_eq_card]
-  rw [← hcard, Finset.mul_sum]
+  have hle : countA A (t + 1) ≤ countA A (u + 1) :=
+    countA_mono A (Nat.add_le_add_right htu 1)
+  rw [← Nat.cast_sub hle, ← hcard, Finset.mul_sum]
   calc ∑ a ∈ (Finset.range (u + 1)).filter (· ∈ A \ {0}) \
           (Finset.range (t + 1)).filter (· ∈ A \ {0}), (t : ℝ) * (1 / a)
       ≤ ∑ _a ∈ (Finset.range (u + 1)).filter (· ∈ A \ {0}) \

@@ -48,7 +48,7 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
     have hF : (Finset.range (0 + 1)).filter (fun n ↦ s ≤
         ∑ p ∈ n.primeFactors.filter (fun p ↦ Y < p),
           n.factorization p) = ∅ := by
-      apply Finset.eq_empty_iff_forall_not_mem.mpr
+      rw [Finset.eq_empty_iff_forall_notMem]
       intro n hn
       have hnm := Finset.mem_filter.mp hn
       have hn0 : n = 0 := by
@@ -58,7 +58,7 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
       rw [Nat.primeFactors_zero, Finset.filter_empty, Finset.sum_empty] at hnm
       omega
     rw [hF, Finset.card_empty, Nat.cast_zero]
-    positivity
+    simp
   -- `u ≥ 1`.  Set up the prime split `P = P₁ ∪ P₂` as in `MassSplit`.
   set P₂ : Finset ℕ := (Nat.primesBelow (u + 1)).filter (fun p ↦ Y < p) with hP₂
   set P₁ : Finset ℕ := Nat.primesBelow (Y + 1) with hP₁
