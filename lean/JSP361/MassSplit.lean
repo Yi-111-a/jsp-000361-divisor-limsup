@@ -87,7 +87,7 @@ theorem sum_range_pow_le_inv_one_sub {w : ℝ} (hw0 : 0 ≤ w) (hw1 : w < 1) (B 
     rw [show w - 1 = -(1 - w) by ring, show w ^ B - 1 = -(1 - w ^ B) by ring,
       neg_div_neg_eq]
   rw [h2, div_le_div_iff₀ hw hw, one_mul]
-  exact mul_le_mul_of_nonneg_right (sub_le_self 1 (pow_nonneg hw0 B)) hw.le
+  simpa using mul_le_mul_of_nonneg_right (sub_le_self 1 (pow_nonneg hw0 B)) hw.le
 
 /-- **Finite Euler-product bound.**  For a finite set `P` of primes and weights
 `0 ≤ w p < 1`, the sum of `∏_{p ∈ P} w p ^ (a.factorization p)` over nonzero
@@ -133,8 +133,9 @@ theorem sum_factorization_prod_le (X : ℕ) (P : Finset ℕ) (w : ℕ → ℝ)
         (le_trans hpow (Nat.le_pred_of_lt haX))
     exact Finset.mem_range.mpr (Nat.lt_succ_iff.mpr hlog)
   -- `a` is recovered from its exponent tuple
-  have hφinj : Set.InjOn (fun a p (_ : p ∈ P) ↦ a.factorization p) S := by
+  have hφinj : Set.InjOn (fun (a : ℕ) p (_ : p ∈ P) ↦ a.factorization p) ↑S := by
     intro a ha b hb hab
+    simp only [Finset.mem_coe] at ha hb
     have key : ∀ c ∈ S, c = ∏ p ∈ P, p ^ c.factorization p := by
       intro c hc
       have hc0 : c ≠ 0 := (Finset.mem_filter.mp hc).2.1
@@ -242,7 +243,7 @@ theorem recipSum_le_of_largeOmegaFac_le_z (X Y t : ℕ) {z : ℝ} (hz : 0 < z)
       calc (1:ℝ)/p ≤ 1/2 := (one_div_le_one_div_of_le (by norm_num) h2)
         _ < 1 := by norm_num
     · rw [hwP₂ p hp2]
-      have hpos : (0:ℝ) < (p:ℝ) := by positivity
+      have hpos : (0:ℝ) < (p:ℝ) := by exact_mod_cast (hP₂mem p hp2).1.pos
       rw [div_lt_iff₀ hpos, one_mul]
       exact lt_of_le_of_lt hz1
         (by exact_mod_cast (hP₂mem p hp2).1.one_lt)
@@ -284,8 +285,8 @@ theorem recipSum_le_of_largeOmegaFac_le_z (X Y t : ℕ) {z : ℝ} (hz : 0 < z)
           rw [Nat.factorization_eq_zero_of_not_dvd
             (fun hdvd ↦ hpn (Nat.mem_primeFactors.mpr
               ⟨hprimeP p hpP, hdvd, ha0⟩)), pow_zero]
-      rw [← hsub2, ← hself]
-      norm_cast
+      rw [← hsub2]
+      exact_mod_cast hself
     -- the `P₁`-factors give `1/u`, the `P₂`-factors give `z^{Ω_{>Y}}/v`
     have hA : ∏ p ∈ P₁, massWeight Y z p ^ a.factorization p =
         (∏ p ∈ P₁, (p:ℝ) ^ a.factorization p)⁻¹ := by
@@ -303,7 +304,7 @@ theorem recipSum_le_of_largeOmegaFac_le_z (X Y t : ℕ) {z : ℝ} (hz : 0 < z)
             Finset.prod_congr rfl fun p hp ↦ by rw [div_pow]
         _ = (∏ p ∈ P₂, z ^ a.factorization p) /
               ∏ p ∈ P₂, (p:ℝ) ^ a.factorization p :=
-            Finset.prod_div_distrib
+            Finset.prod_div_distrib _ _
         _ = z ^ (∑ p ∈ P₂, a.factorization p) /
               ∏ p ∈ P₂, (p:ℝ) ^ a.factorization p := by
             rw [Finset.prod_pow_eq_pow_sum]
@@ -334,7 +335,7 @@ theorem recipSum_le_of_largeOmegaFac_le_z (X Y t : ℕ) {z : ℝ} (hz : 0 < z)
       conv_lhs => rw [hdec, pow_add]
       calc z ^ (∑ p ∈ P₂, a.factorization p) * z ^ (t - ∑ p ∈ P₂, a.factorization p)
           ≤ z ^ (∑ p ∈ P₂, a.factorization p) * 1 :=
-            mul_le_mul_of_nonneg_left (pow_le_one₀ hz.le hz1) (pow_pos hz _)
+            mul_le_mul_of_nonneg_left (pow_le_one₀ hz.le hz1) (pow_pos hz _).le
         _ = z ^ (∑ p ∈ P₂, a.factorization p) := mul_one _
     have hapos : (0:ℝ) < (a:ℝ) := Nat.cast_pos.mpr (Nat.pos_of_ne_zero ha0)
     have h5 : (1:ℝ)/a ≤ (z ^ (∑ p ∈ P₂, a.factorization p) / z ^ t) / a := by
@@ -373,13 +374,13 @@ theorem recipSum_le_of_largeOmegaFac_le_z (X Y t : ℕ) {z : ℝ} (hz : 0 < z)
     _ = (z ^ t)⁻¹ * ((∏ p ∈ P₁, (1 - (1:ℝ)/p)⁻¹) *
           ∏ p ∈ P₂, (1 - z/(p:ℝ))⁻¹) := by
         rw [hP, Finset.prod_union hdisj]
-        congr 1
-        · apply Finset.prod_congr rfl
-          intro p hp
-          rw [hwP₁ p hp]
-        · apply Finset.prod_congr rfl
-          intro p hp
-          rw [hwP₂ p hp]
+        have e1 : ∏ p ∈ P₁, (1 - massWeight Y z p)⁻¹ =
+            ∏ p ∈ P₁, (1 - (1:ℝ)/p)⁻¹ :=
+          Finset.prod_congr rfl fun p hp ↦ by rw [hwP₁ p hp]
+        have e2 : ∏ p ∈ P₂, (1 - massWeight Y z p)⁻¹ =
+            ∏ p ∈ P₂, (1 - z/(p:ℝ))⁻¹ :=
+          Finset.prod_congr rfl fun p hp ↦ by rw [hwP₂ p hp]
+        rw [e1, e2]
 
 /-- `(1 - x)⁻¹ ≤ exp (2x)` for `0 ≤ x ≤ 1/2`. -/
 theorem inv_one_sub_le_exp_two_mul {x : ℝ} (hx0 : 0 ≤ x) (hx1 : x ≤ 1/2) :

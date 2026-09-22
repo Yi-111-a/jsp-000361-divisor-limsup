@@ -24,7 +24,7 @@ noncomputable def countA (A : Set ℕ) (x : ℕ) : ℕ :=
 
 theorem countA_eq_card (A : Set ℕ) (x : ℕ) :
     countA A x = ((Finset.range x).filter (· ∈ A \ {0})).card :=
-  Nat.count_eq_card_filter_range x
+  Nat.count_eq_card_filter_range _ x
 
 theorem countA_le (A : Set ℕ) (x : ℕ) : countA A x ≤ x := by
   rw [countA_eq_card]

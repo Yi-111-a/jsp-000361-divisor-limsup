@@ -150,7 +150,7 @@ theorem caseB_dichotomy (A : Set ℕ)
         Real.log (Real.log (x : ℝ)))
         = Real.sqrt (Real.log (Real.log (w : ℝ))) /
           Real.sqrt (Real.log (Real.log (x : ℝ))) :=
-      Real.sqrt_div hllx.le _
+      Real.sqrt_div hllw.le _
     -- Taking logs of `f x ^ (2√(llw/llx)) < f w`.
     have hlogfw : 2 * Real.sqrt (Real.log (Real.log (w : ℝ)) /
           Real.log (Real.log (x : ℝ))) * Real.log (recipSum A x)
