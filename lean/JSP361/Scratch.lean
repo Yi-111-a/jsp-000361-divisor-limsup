@@ -1,20 +1,58 @@
-import JSP361.Counting
-import Mathlib
+import JSP361.CountA
+import JSP361.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Analysis.Complex.ExponentialBounds
+import Mathlib.Analysis.Real.Sqrt
 
 open Finset
 open Classical
+open Real
 
-namespace JSP361
-
--- name checks
-example (f : ℕ → ℝ) {m n : ℕ} (h : m ≤ n) :
-    ∑ i ∈ Finset.Ico m n, (f (i + 1) - f i) = f n - f m :=
-  Finset.sum_Ico_eq_sub f h
-
-example (f : ℕ → ℝ) {m n : ℕ} (h : m ≤ n) :
-    ∑ i ∈ Finset.range m, f i + ∑ i ∈ Finset.Ico m n, f i = ∑ i ∈ Finset.range n, f i :=
-  Finset.sum_range_add_sum_Ico f h
-
-example : True := by trivial
-
-end JSP361
+#check @Real.log_prod
+#check @Real.log_le_log
+#check @Real.log_le_sub_one_of_pos
+#check @Real.log_rpow
+#check @Real.log_pow
+#check @Real.log_div
+#check @Real.log_mul
+#check @Real.log_sqrt
+#check @Real.sqrt_le_sqrt
+#check @Real.mul_self_sqrt
+#check @Real.sq_sqrt
+#check @Real.sqrt_sq
+#check @Real.le_sqrt'
+#check @Real.le_sqrt
+#check @Real.rpow_mul
+#check @Real.rpow_natCast
+#check @Real.sqrt_eq_rpow
+#check @Real.rpow_pos_of_pos
+#check @Real.log_two_gt_d9
+#check @Real.log_two_lt_d9
+#check @le_div_iff₀
+#check @div_le_iff₀
+#check @div_le_div_iff₀
+#check @mul_le_mul
+#check @mul_le_mul_of_nonneg_left
+#check @mul_le_mul_of_nonneg_right
+#check @div_le_div_right
+#check @Finset.prod_le_prod
+#check @Finset.prod_le_prod_of_subset_of_one_le
+#check @Finset.sum_le_sum_of_subset_of_nonneg
+#check @Finset.prod_ne_zero_iff
+#check @Finset.prod_const
+#check @Finset.card_erase_of_mem
+#check @Finset.erase_eq_of_notMem
+#check @Finset.mem_erase
+#check @Finset.erase_subset
+#check @Nat.lt_two_pow_self
+#check @pow_le_pow_right₀
+#check @Nat.cast_prod
+#check @nsmul_eq_mul
+#check @Finset.sum_const
+#check @pow_le_pow_left₀
+#check @mul_div_cancel_left₀
+#check @dA_prod_ge
+#check @countA_eq_card
+#check @mem_of_mem_countA
+#check @Nat.pow_le_pow_right
