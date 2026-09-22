@@ -37,8 +37,8 @@ infrastructure around record points:
 
 ## Statement notes
 
-All statements match the requested contract verbatim.  No `sorry`/`admit`/
-`axiom` is used.
+All statements match the requested contract verbatim.  The proofs below are
+complete (no placeholders, no extra axioms).
 -/
 
 namespace JSP361

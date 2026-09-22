@@ -2,6 +2,8 @@ import JSP361.Defs
 import JSP361.LcmWin
 import JSP361.ChebBound
 import JSP361.BandDensity
+import JSP361.CaseA
+import JSP361.CaseB
 import Mathlib.Algebra.BigOperators.GroupWithZero.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 import Mathlib.Algebra.GCDMonoid.Finset
@@ -255,44 +257,15 @@ theorem divisor_set_limsup_divergent (A : Set ℕ) (hA : A.Infinite)
         · exact fun b hb => (hFsub hb).1
         · exact fun hb => (hFsub hb).2 rfl
       exact lt_of_lt_of_le hm (Nat.cast_le.mpr hcard)
-    · -- `k ≥ 1`, `C > 0`: the Erdős–Sárközy core (see file header).
-      by_contra hcon
-      push_neg at hcon
-      -- hcon : ∀ x n, n < x → (dA A n : ℝ) ≤ C * recipSum A x ^ (k' + 1)
-      -- The lcm window `Nat.lcmUpto t = lcm(1,…,t)` is divisible by every
-      -- `a ∈ A ∩ [1, t]`; applying `hcon` at `x = lcmUpto t + 1` forces the
-      -- counting function `countA` to stay polynomially small in `recipSum`
-      -- at the exponentially-spaced scales `⌈e^{(log4+4)·t}⌉`.
-      have hfail : ∀ t : ℕ, (countA A (t + 1) : ℝ) ≤
-          C * recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1) ^ (k' + 1) := by
-        intro t
-        calc (countA A (t + 1) : ℝ)
-            ≤ (dA A (Nat.lcmUpto t) : ℝ) :=
-              Nat.cast_le.mpr (countA_le_dA_lcmUpto A t)
-          _ ≤ C * recipSum A (Nat.lcmUpto t + 1) ^ (k' + 1) :=
-              hcon _ _ (Nat.lt_succ_self _)
-          _ ≤ C * recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1) ^ (k' + 1) :=
-              mul_le_mul_of_nonneg_left
-                (pow_le_pow_left₀ (div_recipSum_nonneg A _)
-                  (recipSum_lcmUpto_le_exp A t) _) hC.le
-      -- `hfail` forces `recipSum`'s mass into multiplicative bands
-      -- `(t, e^{(log4+4)·t}]` at dense scales (`countA A t ≥ t/(log t)²`,
-      -- `exists_countA_ge_div_log_sq`): `hband` below is the proved
-      -- consequence used by the remaining argument.
-      have hband : ∀ B : ℕ, ∃ t : ℕ, B ≤ t ∧ 8 ≤ t ∧
-          t * (recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1)
-                - recipSum A (t + 1)) ≤
-            (countA A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1)
-              - countA A (t + 1) : ℝ) := by
-        intro B
-        obtain ⟨t, htB, hdense⟩ :=
-          exists_countA_ge_div_log_sq A hU (max B 8)
-        exact ⟨t, le_trans (le_max_left _ _) htB,
-          le_trans (le_max_right _ _) htB,
-          band_count_ge A (by omega) hC hfail
-            (le_trans (le_max_right _ _) htB) hdense⟩
-      -- Closing the remaining multiplicatively-dense branch is the genuine
-      -- ErSa80 Part-II sieve content (see module docstring).
-      sorry
+    · -- `k ≥ 1`, `C > 0`: split on whether `recipSum` stays below
+      -- `exp(√(log log u))` eventually (Case A, `JSP361/CaseA.lean`) or
+      -- exceeds it at arbitrarily large scales (Case B, `JSP361/CaseB.lean`).
+      by_cases hB : ∀ U : ℕ, ∃ u : ℕ, U ≤ u ∧
+          Real.exp (Real.sqrt (Real.log (Real.log (u : ℝ)))) < recipSum A u
+      · exact divisor_limsup_caseB A hA hU hB (k' + 1) C hC
+      · push_neg at hB
+        obtain ⟨U, hUbd⟩ := hB
+        exact divisor_limsup_caseA A hA hU
+          ⟨U, fun u hu => not_lt.mp (hUbd u hu)⟩ (Nat.succ_pos k') hC
 
 end JSP361
