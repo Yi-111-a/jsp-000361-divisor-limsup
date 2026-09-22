@@ -135,7 +135,7 @@ private lemma prod_one_div_pow_factorization_eq {a : ℕ} (ha : a ≠ 0) {P : Fi
         intro p _
         rw [one_div, inv_pow]
     _ = (∏ p ∈ a.primeFactors, (p:ℝ) ^ a.factorization p)⁻¹ :=
-        Finset.prod_inv_distrib (fun p ↦ (p:ℝ) ^ a.factorization p)
+        Finset.prod_inv_distrib (fun p : ℕ ↦ (p:ℝ) ^ a.factorization p)
     _ = ((a:ℝ))⁻¹ := by rw [hcast]
     _ = (1:ℝ)/a := (one_div _).symm
 
@@ -229,13 +229,13 @@ theorem sum_prime_recip_ge (x : ℕ) (hx : 16 ≤ x) :
       _ = ∑ p ∈ Nat.primesBelow x, (1:ℝ)/p
             + ∑ p ∈ Nat.primesBelow x, (1:ℝ)/(p*(p-1)) :=
           Finset.sum_add_distrib
-      _ ≤ ∑ p ∈ Nat.primesBelow x, (1:ℝ)/p + 1 :=
-          add_le_add_left
-            (sum_pred_mul_le_one (P := Nat.primesBelow x) (x - 1)
-              (fun p hp ↦ (Nat.prime_of_mem_primesBelow hp).two_le)
-              (fun p hp ↦ by
-                have h := Nat.lt_of_mem_primesBelow hp
-                omega)) _
+      _ ≤ ∑ p ∈ Nat.primesBelow x, (1:ℝ)/p + 1 := by
+          have h := sum_pred_mul_le_one (P := Nat.primesBelow x) (x - 1)
+            (fun p hp ↦ (Nat.prime_of_mem_primesBelow hp).two_le)
+            (fun p hp ↦ by
+              have h := Nat.lt_of_mem_primesBelow hp
+              omega)
+          linarith
   linarith [hll, hneg]
 
 /-- Upper Mertens product bound: `∏_{p≤Y}(1-1/p)⁻¹ ≤ e^25·(log Y)^4`. -/
@@ -269,13 +269,13 @@ theorem prod_primesBelow_le (Y : ℕ) (hY : 16 ≤ Y) :
       _ = ∑ p ∈ Nat.primesBelow (Y+1), (1:ℝ)/p
             + ∑ p ∈ Nat.primesBelow (Y+1), (1:ℝ)/(p*(p-1)) :=
           Finset.sum_add_distrib
-      _ ≤ ∑ p ∈ Nat.primesBelow (Y+1), (1:ℝ)/p + 1 :=
-          add_le_add_left
-            (sum_pred_mul_le_one (P := Nat.primesBelow (Y+1)) Y
-              (fun p hp ↦ (Nat.prime_of_mem_primesBelow hp).two_le)
-              (fun p hp ↦ by
-                have h := Nat.lt_of_mem_primesBelow hp
-                omega)) _
+      _ ≤ ∑ p ∈ Nat.primesBelow (Y+1), (1:ℝ)/p + 1 := by
+          have h := sum_pred_mul_le_one (P := Nat.primesBelow (Y+1)) Y
+            (fun p hp ↦ (Nat.prime_of_mem_primesBelow hp).two_le)
+            (fun p hp ↦ by
+              have h := Nat.lt_of_mem_primesBelow hp
+              omega)
+          linarith
   have hM : ∑ p ∈ Nat.primesBelow (Y+1), (1:ℝ)/p
       ≤ 4 * Real.log (Real.log ((Y+1:ℕ):ℝ)) + 20 :=
     sum_prime_recip_le_loglog (Y+1) (by omega)

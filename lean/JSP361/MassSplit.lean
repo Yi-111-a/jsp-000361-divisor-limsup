@@ -142,8 +142,9 @@ theorem sum_factorization_prod_le (X : ℕ) (P : Finset ℕ) (w : ℕ → ℝ)
       have hsub : c.primeFactors ⊆ P := (Finset.mem_filter.mp hc).2.2
       have hself : ∏ p ∈ c.primeFactors, p ^ c.factorization p = c :=
         Nat.prod_factorization_pow_eq_self hc0
-      rw [← hself]
+      conv_lhs => rw [← hself]
       exact Finset.prod_subset hsub fun p hpP hpn ↦ by
+        show p ^ c.factorization p = 1
         rw [Nat.factorization_eq_zero_of_not_dvd
           (fun hdvd ↦ hpn (Nat.mem_primeFactors.mpr ⟨hP p hpP, hdvd, hc0⟩)),
           pow_zero]
@@ -168,7 +169,8 @@ theorem sum_factorization_prod_le (X : ℕ) (P : Finset ℕ) (w : ℕ → ℝ)
         · intro f _ _
           exact Finset.prod_nonneg fun x _ ↦ pow_nonneg (hw0 x.1 x.2) _
     _ = ∏ p ∈ P, ∑ e ∈ Finset.range (Nat.log p (X - 1) + 1), w p ^ e := by
-        exact (Finset.prod_sum P _ _).symm
+        exact (Finset.prod_sum P (fun p ↦ Finset.range (Nat.log p (X - 1) + 1))
+          (fun p e ↦ w p ^ e)).symm
     _ ≤ ∏ p ∈ P, (1 - w p)⁻¹ :=
         Finset.prod_le_prod₀
           (fun p hp ↦ Finset.sum_nonneg fun e _ ↦ pow_nonneg (hw0 p hp) e)

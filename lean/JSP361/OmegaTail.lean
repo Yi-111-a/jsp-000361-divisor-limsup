@@ -168,8 +168,8 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
           rw [Nat.factorization_eq_zero_of_not_dvd
             (fun hdvd ↦ hpn (Nat.mem_primeFactors.mpr
               ⟨hprimeP p hpP, hdvd, ha0⟩)), pow_zero]
-      rw [← hsub2, ← hself]
-      norm_cast
+      rw [← hsub2]
+      exact_mod_cast hself
     have hA : ∏ p ∈ P₁, massWeight Y z p ^ a.factorization p =
         (∏ p ∈ P₁, (p : ℝ) ^ a.factorization p)⁻¹ := by
       rw [← Finset.prod_inv_distrib]
@@ -186,7 +186,8 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
             Finset.prod_congr rfl fun p hp ↦ by rw [div_pow]
         _ = (∏ p ∈ P₂, z ^ a.factorization p) /
               ∏ p ∈ P₂, (p : ℝ) ^ a.factorization p :=
-            Finset.prod_div_distrib
+            Finset.prod_div_distrib (fun p ↦ z ^ a.factorization p)
+              (fun p : ℕ ↦ (p : ℝ) ^ a.factorization p)
         _ = z ^ (∑ p ∈ P₂, a.factorization p) /
               ∏ p ∈ P₂, (p : ℝ) ^ a.factorization p := by
             rw [Finset.prod_pow_eq_pow_sum]
@@ -260,7 +261,7 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
   have hcard : (Filt.card : ℝ) * z ^ s ≤
       (u : ℝ) * ∏ p ∈ P, (1 - massWeight Y z p)⁻¹ := by
     have h := mul_le_mul_of_nonneg_right hlow hupos.le
-    rw [← mul_assoc, div_mul_cancel₀ _ hupos.ne'] at h
+    rw [mul_assoc, div_mul_cancel₀ _ hupos.ne'] at h
     exact h.trans_eq (mul_comm _ _)
   have hcard' : (Filt.card : ℝ) ≤
       (u : ℝ) * (z ^ s)⁻¹ * ∏ p ∈ P, (1 - massWeight Y z p)⁻¹ := by
@@ -284,7 +285,7 @@ theorem card_bigOmega_ge_le (Y u s : ℕ) {z : ℝ} (hz : 1 ≤ z)
       Real.exp (2 * z * ∑ p ∈ P₂, (1 : ℝ) / p) := by
     calc ∏ p ∈ P₂, (1 - z / (p : ℝ))⁻¹
         ≤ ∏ p ∈ P₂, Real.exp (2 * (z / (p : ℝ))) := by
-          apply Finset.prod_le_prod
+          apply Finset.prod_le_prod₀
           · intro p hp
             apply inv_nonneg.mpr
             have h2 : (2 : ℝ) ≤ (p : ℝ) := by
