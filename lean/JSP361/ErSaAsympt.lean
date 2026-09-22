@@ -65,8 +65,8 @@ private lemma mul_log_div_mono {C u v : ℝ} (hC : 0 < C) (hu : 0 < u) (huv : u 
     mul_le_mul_of_nonneg_left h5 (sub_nonneg.mpr huv)
   linarith [h7, h8]
 
-/-- Parameter `t` for the ErSa80 core argument. -/
 set_option maxHeartbeats 1600000 in
+/-- Parameter `t` for the ErSa80 core argument. -/
 theorem ersa_params {L lf S : ℝ} (hL : (100000 : ℝ) ≤ L)
     (hlf : Real.sqrt L < lf) (hlfu : lf ≤ L + 1)
     (hS : L / 2 ≤ S) (hSS : S ≤ 6 * L) :
@@ -300,7 +300,7 @@ theorem ersa_params {L lf S : ℝ} (hL : (100000 : ℝ) ≤ L)
     calc Real.exp 1 / 30 * ((lf ^ 2 / L) * Real.log (L / lf))
         ≤ Real.exp 1 / 30 * (lf / Real.exp 1) :=
           mul_le_mul_of_nonneg_left hllf (by positivity)
-      _ = lf / 30 := by field_simp; ring
+      _ = lf / 30 := by field_simp; try ring
   have hA1 : A * Real.log 768 ≤ (306 / 1000) * lf := by
     rw [hAeq]
     have hAnn : (0 : ℝ) ≤ Real.exp 1 / 60 * lf ^ 2 / L := by positivity
@@ -313,19 +313,19 @@ theorem ersa_params {L lf S : ℝ} (hL : (100000 : ℝ) ≤ L)
         nlinarith [h]
       have h2' : lf * (L + 1) / L ≤ (100001 / 100000 : ℝ) * lf := by
         have h3' : (L + 1) / L ≤ (100001 : ℝ) / 100000 := by
-          rw [div_le_div_iff₀ (by positivity : (0 : ℝ) < L + 1)
-            (by norm_num : (0 : ℝ) < 100000)]
+          rw [div_le_div_iff₀ hLpos (by norm_num : (0 : ℝ) < 100000)]
           linarith [hL]
         have h4' : lf * (L + 1) / L = lf * ((L + 1) / L) := by ring
         rw [h4']
-        exact mul_le_mul_of_nonneg_left h3' hlf_pos.le
+        exact (mul_le_mul_of_nonneg_left h3' hlf_pos.le).trans_eq (mul_comm _ _)
       calc lf ^ 2 / L ≤ lf * (L + 1) / L :=
             (div_le_div_iff₀ hLpos hLpos).mpr
               (mul_le_mul_of_nonneg_right h1' hLpos.le)
         _ ≤ (100001 / 100000 : ℝ) * lf := h2'
     have h2 : Real.exp 1 / 60 * lf ^ 2 / L
-        ≤ Real.exp 1 / 60 * ((100001 / 100000 : ℝ) * lf) :=
-      mul_le_mul_of_nonneg_left hlf2L (by positivity)
+        ≤ Real.exp 1 / 60 * ((100001 / 100000 : ℝ) * lf) := by
+      rw [mul_div_assoc]
+      exact mul_le_mul_of_nonneg_left hlf2L (by positivity)
     have h3 : Real.exp 1 / 60 * ((100001 / 100000 : ℝ) * lf) * 6.75
         ≤ (306 / 1000) * lf := by
       nlinarith [he_hi, hlf_pos.le]

@@ -4,6 +4,7 @@ import JSP361.Counting
 import JSP361.Unbounded
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.LinearCombination
 
 /-!
 # JSP-000361 — Case B: `f` is somewhere larger than `exp(√(log log))`
@@ -119,7 +120,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
     -- `B₂` dominates `4k/(2c)` and solves the quadratic inequality.
     have hB2ge : (4:ℝ)*(k:ℝ)/(2*c) ≤ B₂ := by
       have h1 : (4*(k:ℝ))/(2*c) ≤ (4*(k:ℝ) + Real.sqrt D)/(2*c) :=
-        (div_le_div_right h2c).mpr (le_add_of_nonneg_right (Real.sqrt_nonneg _))
+        (div_le_div_iff_of_pos_right h2c).mpr (le_add_of_nonneg_right (Real.sqrt_nonneg _))
       rw [hB2_def]; linarith
     have hB2pos : (0:ℝ) ≤ B₂ := by
       have h0 : (0:ℝ) ≤ 4*(k:ℝ)/(2*c) :=

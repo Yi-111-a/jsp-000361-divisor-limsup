@@ -1,4 +1,42 @@
-import Mathlib
+import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.BigOperators.Group.Finset.Defs
+import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Algebra.Field.GeomSum
+import Mathlib.Algebra.Group.Basic
+import Mathlib.Algebra.GroupWithZero.Basic
+import Mathlib.Algebra.GroupWithZero.Units.Basic
+import Mathlib.Algebra.NeZero
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
+import Mathlib.Algebra.Order.Field.Basic
+import Mathlib.Algebra.Order.Group.Unbundled.Basic
+import Mathlib.Algebra.Order.GroupWithZero.Basic
+import Mathlib.Algebra.Ring.Basic
+import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import Mathlib.Data.Finset.Attach
+import Mathlib.Data.Finset.Disjoint
+import Mathlib.Data.Finset.Empty
+import Mathlib.Data.Finset.Filter
+import Mathlib.Data.Finset.Image
+import Mathlib.Data.Finset.Lattice.Basic
+import Mathlib.Data.Finset.Pi
+import Mathlib.Data.Finset.Range
+import Mathlib.Data.Nat.Cast.Order.Ring
+import Mathlib.Data.Nat.Factorization.Basic
+import Mathlib.Data.Nat.Factorization.Defs
+import Mathlib.Data.Nat.Log
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Data.Nat.PrimeFin
+import Mathlib.Data.Real.Basic
+import Mathlib.Data.Set.Operations
+import Mathlib.NumberTheory.PrimeCounting
+import Mathlib.Tactic.ByContra
+import Mathlib.Tactic.GCongr
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.Ring
 
 /-!
 # Complement-mass bound ("Lemma 2") for Erdős–Sárközy Part II
@@ -48,7 +86,7 @@ theorem sum_range_pow_le_inv_one_sub {w : ℝ} (hw0 : 0 ≤ w) (hw1 : w < 1) (B 
   have h2 : (w ^ B - 1) / (w - 1) = (1 - w ^ B) / (1 - w) := by
     rw [show w - 1 = -(1 - w) by ring, show w ^ B - 1 = -(1 - w ^ B) by ring,
       neg_div_neg_eq]
-  rw [h2, div_le_div_iff hw hw, one_mul]
+  rw [h2, div_le_div_iff₀ hw hw, one_mul]
   exact mul_le_mul_of_nonneg_right (sub_le_self 1 (pow_nonneg hw0 B)) hw.le
 
 /-- **Finite Euler-product bound.**  For a finite set `P` of primes and weights
@@ -71,7 +109,7 @@ theorem sum_factorization_prod_le (X : ℕ) (P : Finset ℕ) (w : ℕ → ℝ)
   rcases Nat.lt_or_ge X 2 with hX | hX
   · -- `X ≤ 1`: the filtered set is empty.
     have hSe : S = ∅ := by
-      apply Finset.eq_empty_iff_forall_not_mem.mpr
+      apply Finset.eq_empty_iff_forall_notMem.mpr
       intro a ha
       have haX : a < X := Finset.mem_range.mp (Finset.mem_filter.mp ha).1
       have ha0 : a ≠ 0 := (Finset.mem_filter.mp ha).2.1
@@ -131,7 +169,7 @@ theorem sum_factorization_prod_le (X : ℕ) (P : Finset ℕ) (w : ℕ → ℝ)
     _ = ∏ p ∈ P, ∑ e ∈ Finset.range (Nat.log p (X - 1) + 1), w p ^ e := by
         exact (Finset.prod_sum P _ _).symm
     _ ≤ ∏ p ∈ P, (1 - w p)⁻¹ :=
-        Finset.prod_le_prod
+        Finset.prod_le_prod₀
           (fun p hp ↦ Finset.sum_nonneg fun e _ ↦ pow_nonneg (hw0 p hp) e)
           (fun p hp ↦ sum_range_pow_le_inv_one_sub (hw0 p hp) (hw1 p hp) _)
 
@@ -360,7 +398,7 @@ theorem prod_one_sub_zdiv_inv_le_exp (P : Finset ℕ) {z : ℝ} (hz0 : 0 ≤ z)
     ∏ p ∈ P, (1 - z/(p:ℝ))⁻¹ ≤ Real.exp (2 * z * ∑ p ∈ P, (1:ℝ)/p) := by
   calc ∏ p ∈ P, (1 - z/(p:ℝ))⁻¹
       ≤ ∏ p ∈ P, Real.exp (2 * (z/(p:ℝ))) := by
-        apply Finset.prod_le_prod
+        apply Finset.prod_le_prod₀
         · intro p hp
           have hp2 : (2:ℝ) ≤ (p:ℝ) := by exact_mod_cast hP p hp
           have hpos : (0:ℝ) < (p:ℝ) := by positivity

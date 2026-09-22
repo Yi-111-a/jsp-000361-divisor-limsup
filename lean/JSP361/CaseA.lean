@@ -207,7 +207,7 @@ private theorem ev_smooth_bound_caseA (k : ℕ) (hk : 1 ≤ k) (C : ℝ) (hC : 0
   have hpowk : ((y:ℝ)^((1:ℝ)/(4*(k:ℝ))))^k = (y:ℝ)^((1:ℝ)/4) := by
     rw [← Real.rpow_natCast _ k, ← Real.rpow_mul (Nat.cast_nonneg y)]
     congr 1
-    rw [← div_div, div_mul_cancel₀ hk0]
+    rw [← div_div, div_mul_cancel₀ _ hk0]
   have h14 : (0:ℝ) ≤ (y:ℝ)^((1:ℝ)/4) := Real.rpow_nonneg (Nat.cast_nonneg _) _
   have h2l : 2*(Real.log (y:ℝ))^2 ≤ (y:ℝ)^((1:ℝ)/4) := by linarith [hlog2]
   have e14 : (y:ℝ)^((1:ℝ)/4)*(y:ℝ)^((1:ℝ)/4) = (y:ℝ)^((1:ℝ)/2) := by
@@ -718,7 +718,7 @@ theorem divisor_limsup_caseA (A : Set ℕ) (hA : A.Infinite)
     have h3 : ((y:ℝ)^((1:ℝ)/(4*(k:ℝ))))^r = (y:ℝ)^((r:ℝ)/(4*(k:ℝ))) := by
       rw [← Real.rpow_natCast _ r, ← Real.rpow_mul (Nat.cast_nonneg _)]
       congr 1
-      rw [← div_div, div_mul_cancel₀ (by exact_mod_cast (by omega : k ≠ 0))]
+      rw [← div_div, div_mul_cancel₀ _ (by exact_mod_cast (by omega : k ≠ 0))]
     have h4 : (y:ℝ)^((r:ℝ)/(4*(k:ℝ)))
         = Real.exp (Real.log (y:ℝ)*((r:ℝ)/(4*(k:ℝ)))) :=
       (Real.rpow_def_of_pos hypos _).symm

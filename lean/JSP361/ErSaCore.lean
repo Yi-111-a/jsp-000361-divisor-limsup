@@ -11,6 +11,7 @@ import JSP361.ErSaAsympt
 import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.IntervalCases
 
 /-!
 # JSP-000361 — the Erdős–Sárközy Part-II core lemma
@@ -654,7 +655,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
       field_simp
       ring
     have h1 : ((r * (t + 1) : ℕ) : ℝ) / E'' ≤ ((r * (t + 1) : ℕ) : ℝ) / (L/2) := by
-      rw [div_le_div_iff hE''pos (by linarith : (0:ℝ) < L/2)]
+      rw [div_le_div_iff₀ hE''pos (by linarith : (0:ℝ) < L/2)]
       exact mul_le_mul_of_nonneg_left hE''ge hsr_pos.le
     have h2 : ((r * (t + 1) : ℕ) : ℝ) / (L/2) ≤ 14 * lx := by
       rw [div_le_iff₀ (by linarith : (0:ℝ) < L/2)]
@@ -779,7 +780,7 @@ theorem ersa_core (A : Set ℕ) (hA : A.Infinite) {x : ℕ}
   have hlogdA : Real.log (dA A n : ℝ) ≥
       Real.log fst + ((t:ℝ) + 1) * (Real.log z - 1)
         - (Real.log 2 + Real.log PY) / (r:ℝ) := by
-    have h := (div_le_div_right hrpos).mpr hlogdAr
+    have h := (div_le_div_iff_of_pos_right hrpos).mpr hlogdAr
     rw [mul_div_cancel_left₀ _ hrpos.ne'] at h
     linarith [h, h3eq]
   have hlogfst : lf - Real.log 2 ≤ Real.log fst := by
