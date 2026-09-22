@@ -16,7 +16,7 @@ increasing order).  These lemmas connect `recipSum` to the sequence
 
 **Interface contract:** the signatures below are FIXED — other files
 (`SmallF.lean`, `Divergent.lean`) code against them.  Do not rename or
-restate; only replace `sorry` proofs.
+restate; only replace placeholder proofs.
 -/
 
 namespace JSP361

@@ -1,4 +1,7 @@
 import JSP361.Defs
+import JSP361.LcmWin
+import JSP361.ChebBound
+import JSP361.BandDensity
 import Mathlib.Algebra.BigOperators.GroupWithZero.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 import Mathlib.Algebra.GCDMonoid.Finset
@@ -60,6 +63,23 @@ Step 2 is the genuinely hard, research-level input; the naive
 product/lcm-of-everything constructions only yield the consistent
 inequality `N_A(y) ≤ C·(1 + c₀·y)^k` (see `div_counter_bound_lcm` at the
 `lcm ≤ 4^y` scale), which does not contradict anything.
+
+## Round-6 reduction (proved below)
+
+The negation of the goal, evaluated at `x = Nat.lcmUpto t + 1`
+(`lcmUpto t = lcm(1,…,t)`, divisible by every `a ≤ t`; `log lcmUpto t`
+`= ψ(t) ≤ (log 4 + 4)·t` by Chebyshev — `JSP361/ChebBound.lean`), yields
+for EVERY `t`:
+
+    `countA A (t + 1) ≤ C · recipSum A (⌈e^{(log4+4)·t}⌉ + 1)^{k+1}`.
+
+Combined with the partial-summation density scales (`countA A y ≥
+y/(log y)²` i.o., `JSP361/Density.lean`), this forces `recipSum`'s mass
+into the bands `(t, e^{(log4+4)·t}]` and forces most elements to carry a
+prime-power factor `> √y` (see `JSP361/RoughElem.lean` for the
+`a ∣ lcmUpto t ↔ ∀ p^e ‖ a, p^e ≤ t` characterization).  The remaining
+branch is exactly the multiplicatively-dense regime handled by ErSa80
+Part II via Brun-type sieve estimates absent from Mathlib.
 -/
 
 namespace JSP361
@@ -239,8 +259,40 @@ theorem divisor_set_limsup_divergent (A : Set ℕ) (hA : A.Infinite)
       by_contra hcon
       push_neg at hcon
       -- hcon : ∀ x n, n < x → (dA A n : ℝ) ≤ C * recipSum A x ^ (k' + 1)
-      -- The contradiction requires the multi-scale density/lcm argument
-      -- described in the module docstring (ErSa80 Part I §3 / Part II).
+      -- The lcm window `Nat.lcmUpto t = lcm(1,…,t)` is divisible by every
+      -- `a ∈ A ∩ [1, t]`; applying `hcon` at `x = lcmUpto t + 1` forces the
+      -- counting function `countA` to stay polynomially small in `recipSum`
+      -- at the exponentially-spaced scales `⌈e^{(log4+4)·t}⌉`.
+      have hfail : ∀ t : ℕ, (countA A (t + 1) : ℝ) ≤
+          C * recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1) ^ (k' + 1) := by
+        intro t
+        calc (countA A (t + 1) : ℝ)
+            ≤ (dA A (Nat.lcmUpto t) : ℝ) :=
+              Nat.cast_le.mpr (countA_le_dA_lcmUpto A t)
+          _ ≤ C * recipSum A (Nat.lcmUpto t + 1) ^ (k' + 1) :=
+              hcon _ _ (Nat.lt_succ_self _)
+          _ ≤ C * recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1) ^ (k' + 1) :=
+              mul_le_mul_of_nonneg_left
+                (pow_le_pow_left₀ (div_recipSum_nonneg A _)
+                  (recipSum_lcmUpto_le_exp A t) _) hC.le
+      -- `hfail` forces `recipSum`'s mass into multiplicative bands
+      -- `(t, e^{(log4+4)·t}]` at dense scales (`countA A t ≥ t/(log t)²`,
+      -- `exists_countA_ge_div_log_sq`): `hband` below is the proved
+      -- consequence used by the remaining argument.
+      have hband : ∀ B : ℕ, ∃ t : ℕ, B ≤ t ∧ 8 ≤ t ∧
+          t * (recipSum A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1)
+                - recipSum A (t + 1)) ≤
+            (countA A (⌈Real.exp ((Real.log 4 + 4) * t)⌉₊ + 1)
+              - countA A (t + 1) : ℝ) := by
+        intro B
+        obtain ⟨t, htB, hdense⟩ :=
+          exists_countA_ge_div_log_sq A hU (max B 8)
+        exact ⟨t, le_trans (le_max_left _ _) htB,
+          le_trans (le_max_right _ _) htB,
+          band_count_ge A (by omega) hC hfail
+            (le_trans (le_max_right _ _) htB) hdense⟩
+      -- Closing the remaining multiplicatively-dense branch is the genuine
+      -- ErSa80 Part-II sieve content (see module docstring).
       sorry
 
 end JSP361
