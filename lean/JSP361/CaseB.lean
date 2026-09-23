@@ -60,6 +60,7 @@ namespace JSP361
 open Finset
 open scoped Classical
 
+set_option maxHeartbeats 3200000 in
 /-- **Case B of the divergent branch.** If `recipSum A` is unbounded and
 exceeds `exp(√(log log u))` at arbitrarily large `u`, the limsup bound
 holds for every `k` and every `C > 0`. -/
@@ -138,7 +139,9 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         have e : 2*c*u - 4*(k:ℝ) = Real.sqrt D := by linarith [he]
         rw [e, Real.sq_sqrt hD0, hD_def]
       have hcu : c * u^2 = 4*(k:ℝ)*u + 2*M := by
-        linear_combination hsq / (4 * c)
+        have h4c : (4*c) * (c * u^2) = (4*c) * (4*(k:ℝ)*u + 2*M) := by
+          linear_combination hsq
+        exact mul_left_cancel₀ (mul_ne_zero (by norm_num) hcn) h4c
       rw [hB2eq]
       nlinarith [hcu, h2cu, hMge, hM0, hc]
     -- facts about `z`
@@ -186,12 +189,13 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
       have hz17 : (17:ℝ) ≤ (z:ℝ) := by
         have h17 : (17:ℕ) ≤ z := by rw [hz_def]; omega
         exact_mod_cast h17
-      have hx1 : (1:ℝ) < (x:ℝ) := by linarith
+      have hx1 : (1:ℝ) < (x:ℝ) :=
+        lt_of_lt_of_le (by norm_num) (hz17.trans hxzR)
       have hlogxpos : 0 < Real.log (x:ℝ) := Real.log_pos hx1
       have hll16x : (100000:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
       have hlogx1 : (1:ℝ) ≤ Real.log (x:ℝ) := by
         have e : (1:ℝ) ≤ Real.exp (Real.log (Real.log (x:ℝ))) :=
-          Real.one_le_exp_iff.mpr (by linarith)
+          Real.one_le_exp_iff.mpr (le_trans (by norm_num) hll16x)
         rwa [Real.exp_log hlogxpos] at e
       -- `ersa_core` applies since `f x > exp(√ll)`.
       have hs0 : 0 ≤ Real.sqrt (Real.log (Real.log (x:ℝ))) := Real.sqrt_nonneg _
@@ -207,20 +211,35 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
       have hnle' : ((n+1:ℕ):ℝ) ≤ 2 * Real.exp (8 * (Real.log (x:ℝ))^2) := by
         push_cast
         have e1 : (1:ℝ) ≤ Real.exp (8 * (Real.log (x:ℝ))^2) :=
-          Real.one_le_exp_iff.mpr (by positivity)
+          Real.one_le_exp_iff.mpr (mul_nonneg (by norm_num) (sq_nonneg _))
         have hnleR : (n:ℝ) ≤ Real.exp (8 * (Real.log (x:ℝ))^2) := hnle
-        linarith
+        calc (n:ℝ) + 1
+            ≤ Real.exp (8 * (Real.log (x:ℝ))^2) +
+                Real.exp (8 * (Real.log (x:ℝ))^2) := add_le_add hnleR e1
+          _ = 2 * Real.exp (8 * (Real.log (x:ℝ))^2) := (two_mul _).symm
       have hlogn1 : Real.log ((n+1:ℕ):ℝ) ≤ Real.log 2 + 8 * (Real.log (x:ℝ))^2 := by
         have h2e : Real.log (2 * Real.exp (8 * (Real.log (x:ℝ))^2)) =
             Real.log 2 + 8 * (Real.log (x:ℝ))^2 := by
           rw [Real.log_mul (by norm_num) (Real.exp_pos _).ne', Real.log_exp]
         calc Real.log ((n+1:ℕ):ℝ)
             ≤ Real.log (2 * Real.exp (8 * (Real.log (x:ℝ))^2)) :=
-              Real.log_le_log (by positivity) hnle'
+              Real.log_le_log (Nat.cast_pos.mpr (Nat.succ_pos n)) hnle'
           _ = Real.log 2 + 8 * (Real.log (x:ℝ))^2 := h2e
       have hf1 : recipSum A (n+1) ≤ 10 * (Real.log (x:ℝ))^2 := by
         have h := recipSum_le_log A (n+1)
-        nlinarith [h, hlogn1, hlogx1, Real.log_two_lt_d9]
+        have hL2 : (1:ℝ) ≤ (Real.log (x:ℝ))^2 := by
+          have h2 := pow_le_pow_left₀ (by norm_num : (0:ℝ) ≤ 1) hlogx1 2
+          rwa [one_pow] at h2
+        have hL9 : Real.log 2 ≤ (Real.log (x:ℝ))^2 :=
+          Real.log_two_lt_d9.le.trans (le_trans (by norm_num) hL2)
+        calc recipSum A (n+1)
+            ≤ 1 + Real.log ((n+1:ℕ):ℝ) := h
+          _ ≤ 1 + (Real.log 2 + 8 * (Real.log (x:ℝ))^2) :=
+              add_le_add_right hlogn1 1
+          _ ≤ 2 * (Real.log (x:ℝ))^2 + 8 * (Real.log (x:ℝ))^2 := by
+              have hsum := add_le_add hL2 hL9
+              linarith [hsum]
+          _ = 10 * (Real.log (x:ℝ))^2 := by ring
       have hCk : C * (recipSum A (n+1))^k ≤ C * (10 * (Real.log (x:ℝ))^2)^k :=
         mul_le_mul_of_nonneg_left
           (pow_le_pow_left₀ (recipSum_nonneg _ _) hf1 k) hC.le
@@ -252,7 +271,7 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         have hs' := mul_lt_mul_of_pos_left hlogfsq hc
         have e : c * (16*(k:ℝ)/c * Real.log (Real.log (x:ℝ))) =
             16*(k:ℝ)*Real.log (Real.log (x:ℝ)) := by
-          rw [div_mul_eq_mul_div]
+          rw [div_mul_eq_mul_div (16 * (k:ℝ)) c (Real.log (Real.log (x:ℝ)))]
           exact mul_div_cancel₀ _ hcn
         rwa [e] at hs'
       have hdense_exp : Real.exp (16*(k:ℝ)*Real.log (Real.log (x:ℝ))) <
@@ -284,12 +303,13 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
       have hz17 : (17:ℝ) ≤ (z:ℝ) := by
         have h17 : (17:ℕ) ≤ z := by rw [hz_def]; omega
         exact_mod_cast h17
-      have hx1 : (1:ℝ) < (x:ℝ) := by linarith
+      have hx1 : (1:ℝ) < (x:ℝ) :=
+        lt_of_lt_of_le (by norm_num) (hz17.trans hxzR)
       have hlogxpos : 0 < Real.log (x:ℝ) := Real.log_pos hx1
       have hll16x : (100000:ℝ) ≤ Real.log (Real.log (x:ℝ)) := hll16 x hxz
       have hlogx1 : (1:ℝ) ≤ Real.log (x:ℝ) := by
         have e : (1:ℝ) ≤ Real.exp (Real.log (Real.log (x:ℝ))) :=
-          Real.one_le_exp_iff.mpr (by linarith)
+          Real.one_le_exp_iff.mpr (le_trans (by norm_num) hll16x)
         rwa [Real.exp_log hlogxpos] at e
       obtain ⟨n, hnle, hdA⟩ := ersa_core A hA hll16x hfx
       rw [← hc_def] at hdA
@@ -315,22 +335,30 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
       have hnle' : ((n+1:ℕ):ℝ) ≤ 2 * Real.exp (8 * (Real.log (x:ℝ))^2) := by
         push_cast
         have e1 : (1:ℝ) ≤ Real.exp (8 * (Real.log (x:ℝ))^2) :=
-          Real.one_le_exp_iff.mpr (by positivity)
+          Real.one_le_exp_iff.mpr (mul_nonneg (by norm_num) (sq_nonneg _))
         have hnleR : (n:ℝ) ≤ Real.exp (8 * (Real.log (x:ℝ))^2) := hnle
-        linarith
+        calc (n:ℝ) + 1
+            ≤ Real.exp (8 * (Real.log (x:ℝ))^2) +
+                Real.exp (8 * (Real.log (x:ℝ))^2) := add_le_add hnleR e1
+          _ = 2 * Real.exp (8 * (Real.log (x:ℝ))^2) := (two_mul _).symm
       have hlogn1 : Real.log ((n+1:ℕ):ℝ) ≤ 9 * (Real.log (x:ℝ))^2 := by
         have h2e : Real.log (2 * Real.exp (8 * (Real.log (x:ℝ))^2)) =
             Real.log 2 + 8 * (Real.log (x:ℝ))^2 := by
           rw [Real.log_mul (by norm_num) (Real.exp_pos _).ne', Real.log_exp]
         have h1 : Real.log ((n+1:ℕ):ℝ) ≤ Real.log 2 + 8 * (Real.log (x:ℝ))^2 :=
-          Real.log_le_log (by positivity) hnle' |>.trans_eq h2e
-        have hL2 : (1:ℝ) ≤ (Real.log (x:ℝ))^2 := by nlinarith [hlogx1]
-        nlinarith [h1, hL2, Real.log_two_lt_d9]
+          Real.log_le_log (Nat.cast_pos.mpr (Nat.succ_pos n)) hnle' |>.trans_eq h2e
+        have hL2 : (1:ℝ) ≤ (Real.log (x:ℝ))^2 := by
+          have h := pow_le_pow_left₀ (by norm_num : (0:ℝ) ≤ 1) hlogx1 2
+          rwa [one_pow] at h
+        have hL9 : Real.log 2 ≤ (Real.log (x:ℝ))^2 :=
+          Real.log_two_lt_d9.le.trans (le_trans (by norm_num) hL2)
+        calc Real.log ((n+1:ℕ):ℝ)
+            ≤ Real.log 2 + 8 * (Real.log (x:ℝ))^2 := h1
+          _ ≤ (Real.log (x:ℝ))^2 + 8 * (Real.log (x:ℝ))^2 :=
+              add_le_add_left hL9 _
+          _ = 9 * (Real.log (x:ℝ))^2 := by ring
       have hn1gt1 : (1:ℝ) < ((n+1:ℕ):ℝ) := by
-        have h1n : 1 ≤ n := Nat.pos_of_ne_zero hn0
-        have h1nR : (1:ℝ) ≤ (n:ℝ) := by exact_mod_cast h1n
-        push_cast
-        linarith
+        exact_mod_cast Nat.succ_lt_succ (Nat.pos_of_ne_zero hn0)
       have hlln1 : Real.log (Real.log ((n+1:ℕ):ℝ)) ≤
           Real.log 9 + 2 * Real.log (Real.log (x:ℝ)) := by
         have h2 : Real.log (Real.log ((n+1:ℕ):ℝ)) ≤
@@ -367,10 +395,11 @@ theorem divisor_limsup_caseB (A : Set ℕ) (hA : A.Infinite)
         linarith [h1, h2]
       -- `f (n+1) ≤ f x ^ 4`
       have hf4 : recipSum A (n+1) ≤ (recipSum A x)^(4:ℝ) := by
-        rcases le_or_lt x (n+1) with hxle | hlt
+        by_cases hxle : x ≤ n + 1
         · exact (hctrl (n+1) hxle).trans
             (Real.rpow_le_rpow_of_exponent_le hfx1 hexp_le4)
-        · exact (recipSum_mono A (Nat.le_of_lt hlt)).trans (by
+        · have hlt : n + 1 < x := not_le.mp hxle
+          exact (recipSum_mono A (Nat.le_of_lt hlt)).trans (by
             have e := Real.rpow_le_rpow_of_exponent_le hfx1
               (by norm_num : (1:ℝ) ≤ 4)
             rwa [Real.rpow_one] at e)

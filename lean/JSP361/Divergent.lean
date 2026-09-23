@@ -267,6 +267,6 @@ theorem divisor_set_limsup_divergent (A : Set ℕ) (hA : A.Infinite)
       · push_neg at hB
         obtain ⟨U, hUbd⟩ := hB
         exact divisor_limsup_caseA A hA hU
-          ⟨U, fun u hu => not_lt.mp (hUbd u hu)⟩ (Nat.succ_pos k') hC
+          ⟨U, fun u hu => hUbd u hu⟩ (Nat.succ_pos k') hC
 
 end JSP361
